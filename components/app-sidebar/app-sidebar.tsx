@@ -63,9 +63,9 @@ const data = {
       url: "#",
       icon: Phone,
       items: [
-        { title: "Twilio", url: "#" },
-        { title: "Retell", url: "#" },
-        { title: "Vapi", url: "#" },
+        { title: "Twilio", url: "/dashboard/twilio" },
+        { title: "Retell", url: "/dashboard/retell" },
+        { title: "Vapi", url: "/dashboard/vapi" },
       ],
     },
     {

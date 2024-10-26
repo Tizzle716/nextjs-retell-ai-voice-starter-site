@@ -1,13 +1,11 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { AppSidebar } from "@/components/app-sidebar/app-sidebar"
 import { columns } from "./columns"
 import { LoadingState } from "./loading-state"
 import { ErrorState } from "./error-state"
 import { EmptyState } from "./empty-state"
 import { Contact } from "@/app/types/contact"
-import { SidebarProvider } from "@/components/ui/sidebar"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { flexRender, getCoreRowModel, useReactTable } from "@tanstack/react-table"
 import { Toolbar } from "./toolbar"
@@ -57,55 +55,50 @@ export default function ContactsPage() {
   }
 
   return (
-    <SidebarProvider>
-      <div className="flex h-screen">
-        <AppSidebar />
-        <div className="flex-1 p-8">
-          <h1 className="text-2xl font-bold mb-4">Contacts</h1>
-          <Toolbar 
-            table={table} 
-            onAddContact={handleAddContact} 
-            onImportContact={handleImportContact} 
-          />
-          {isLoading ? (
-            <LoadingState />
-          ) : error ? (
-            <ErrorState message={error} />
-          ) : contacts.length === 0 ? (
-            <EmptyState />
-          ) : (
-            <Table>
-              <TableHeader>
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <TableRow key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => (
-                      <TableHead key={header.id}>
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(
-                              header.column.columnDef.header,
-                              header.getContext()
-                            )}
-                      </TableHead>
-                    ))}
-                  </TableRow>
+    <>
+      <h1 className="text-2xl font-bold mb-4">Contacts</h1>
+      <Toolbar 
+        table={table} 
+        onAddContact={handleAddContact} 
+        onImportContact={handleImportContact} 
+      />
+      {isLoading ? (
+        <LoadingState />
+      ) : error ? (
+        <ErrorState message={error} />
+      ) : contacts.length === 0 ? (
+        <EmptyState />
+      ) : (
+        <Table>
+          <TableHeader>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <TableHead key={header.id}>
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                  </TableHead>
                 ))}
-              </TableHeader>
-              <TableBody>
-                {table.getRowModel().rows.map((row) => (
-                  <TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </TableCell>
-                    ))}
-                  </TableRow>
+              </TableRow>
+            ))}
+          </TableHeader>
+          <TableBody>
+            {table.getRowModel().rows.map((row) => (
+              <TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
+                {row.getVisibleCells().map((cell) => (
+                  <TableCell key={cell.id}>
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </TableCell>
                 ))}
-              </TableBody>
-            </Table>
-          )}
-        </div>
-      </div>
-    </SidebarProvider>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      )}
+    </>
   )
 }

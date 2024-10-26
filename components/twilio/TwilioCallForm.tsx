@@ -7,11 +7,23 @@ import { PhoneInput } from 'react-international-phone';
 import 'react-international-phone/style.css';
 import { FiPhone, FiPhoneCall, FiPhoneOff } from 'react-icons/fi';
 import { makeCall } from '@/lib/twilio';
-import { mockPhoneNumbers } from '@/app/mocks/twilioMockData';
+import { TwilioPhoneNumber } from '@/app/types/twilio';
 
-export function TwilioCallForm() {
+interface TwilioCallFormProps {
+  phoneNumbers: TwilioPhoneNumber[];
+  onCallInitiated: (callSid: string) => void;
+  onCallEnded: () => void;
+  onDurationChange: (duration: number) => void;
+}
+
+export function TwilioCallForm({ 
+  phoneNumbers, 
+  onCallInitiated, 
+  onCallEnded, 
+  onDurationChange 
+}: TwilioCallFormProps) {
   const [to, setTo] = useState('');
-  const [from, setFrom] = useState(mockPhoneNumbers[0].phoneNumber);
+  const [from, setFrom] = useState(phoneNumbers[0]?.phoneNumber || '');
   const [isLoading, setIsLoading] = useState(false);
   const [isCallActive, setIsCallActive] = useState(false);
   const [callDuration, setCallDuration] = useState(0);
@@ -20,11 +32,15 @@ export function TwilioCallForm() {
     let interval: NodeJS.Timeout;
     if (isCallActive) {
       interval = setInterval(() => {
-        setCallDuration((prev) => prev + 1);
+        setCallDuration((prev) => {
+          const newDuration = prev + 1;
+          onDurationChange(newDuration);
+          return newDuration;
+        });
       }, 1000);
     }
     return () => clearInterval(interval);
-  }, [isCallActive]);
+  }, [isCallActive, onDurationChange]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,6 +49,7 @@ export function TwilioCallForm() {
     try {
       const call = await makeCall(to, from);
       setIsCallActive(true);
+      onCallInitiated(call.sid);
       toast({
         title: 'Call initiated',
         description: `Call SID: ${call.sid}`,
@@ -51,7 +68,7 @@ export function TwilioCallForm() {
   const handleEndCall = () => {
     setIsCallActive(false);
     setCallDuration(0);
-    // Add logic to end the call via Twilio API
+    onCallEnded();
   };
 
   const formatTime = (seconds: number) => {
@@ -61,7 +78,7 @@ export function TwilioCallForm() {
   };
 
   return (
-    <Card className="w-full max-w-md">
+    <Card className="w-full">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <FiPhone className="text-primary" />
@@ -73,11 +90,11 @@ export function TwilioCallForm() {
           <div className="space-y-2">
             <label htmlFor="from" className="text-sm font-medium">From</label>
             <Select value={from} onValueChange={setFrom}>
-              <SelectTrigger>
+              <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select a number" />
               </SelectTrigger>
               <SelectContent>
-                {mockPhoneNumbers.map((number) => (
+                {phoneNumbers.map((number) => (
                   <SelectItem key={number.sid} value={number.phoneNumber}>
                     {number.friendlyName} ({number.phoneNumber})
                   </SelectItem>
@@ -100,14 +117,16 @@ export function TwilioCallForm() {
         {isCallActive ? (
           <>
             <span className="text-sm font-medium">Call duration: {formatTime(callDuration)}</span>
-            <Button onClick={handleEndCall} variant="destructive">
+            <Button onClick={handleEndCall} variant="destructive" className="w-1/3">
               <FiPhoneOff className="mr-2" /> End Call
             </Button>
           </>
         ) : (
           <Button type="submit" disabled={isLoading || !to} onClick={handleSubmit} className="w-full">
             {isLoading ? (
-              'Initiating Call...'
+              <>
+                <span className="animate-spin mr-2">⌛</span> Initiating Call...
+              </>
             ) : (
               <>
                 <FiPhoneCall className="mr-2" /> Make Call

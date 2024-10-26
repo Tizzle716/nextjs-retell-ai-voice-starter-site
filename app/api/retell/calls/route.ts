@@ -1,7 +1,20 @@
 import { NextResponse } from 'next/server'
 import { RetellCall } from '@/app/types/retell'
 
-// Fonction pour générer un appel mock
+export async function GET() {
+  const mockCalls: RetellCall[] = Array.from({ length: 10 }, (_, index) => 
+    generateMockCall(index + 1)
+  );
+
+  return NextResponse.json(mockCalls)
+}
+
+export async function POST(request: Request) {
+  const body = await request.json();
+  // Implement POST logic here
+  return NextResponse.json({ message: "POST request received", data: body })
+}
+
 function generateMockCall(id: number): RetellCall {
   const startTime = Date.now() - Math.floor(Math.random() * 3600000) // Jusqu'à 1 heure dans le passé
   const endTime = startTime + Math.floor(Math.random() * 600000) // Jusqu'à 10 minutes de durée
@@ -69,11 +82,4 @@ function generateMockCall(id: number): RetellCall {
       custom_analysis_data: {},
     },
   }
-}
-
-export async function GET() {
-  // Générer 20 appels mock
-  const mockCalls = Array.from({ length: 20 }, (_, i) => generateMockCall(i + 1))
-
-  return NextResponse.json(mockCalls)
 }

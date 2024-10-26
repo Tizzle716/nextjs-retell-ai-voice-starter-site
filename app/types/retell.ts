@@ -48,3 +48,13 @@ export interface RetellCall {
     call_successful: boolean;
     custom_analysis_data: Record<string, unknown>;
   }
+
+export interface RetellPhoneNumber {
+  phone_number: string;
+  phone_number_pretty: string;
+  inbound_agent_id: string;
+  outbound_agent_id: string;
+  area_code: number;
+  nickname: string;
+  last_modification_timestamp: number;
+}

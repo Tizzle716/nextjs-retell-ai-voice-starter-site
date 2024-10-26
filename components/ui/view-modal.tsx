@@ -1,26 +1,20 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 
-interface ViewModalProps<T extends Record<string, unknown>> {
+interface ViewModalProps<T> {
   isOpen: boolean
   onClose: () => void
-  item: T
+  item: T | null
+  renderContent: (item: T | null) => React.ReactNode
 }
 
-export function ViewModal<T extends Record<string, unknown>>({ isOpen, onClose, item }: ViewModalProps<T>) {
+export function ViewModal<T>({ isOpen, onClose, item, renderContent }: ViewModalProps<T>) {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Item Details</DialogTitle>
+          <DialogTitle>{item ? 'Edit Item' : 'Add New Item'}</DialogTitle>
         </DialogHeader>
-        <div className="mt-4">
-          {Object.entries(item).map(([key, value]) => (
-            <div key={key} className="mb-2">
-              <span className="font-semibold">{key}: </span>
-              <span>{String(value)}</span>
-            </div>
-          ))}
-        </div>
+        {renderContent(item)}
       </DialogContent>
     </Dialog>
   )

@@ -5,6 +5,7 @@ import { DataTable } from "@/components/ui/data-table"
 import { Button } from "@/components/ui/button"
 import { ViewModal } from "@/components/ui/view-modal"
 import { useKnowledgeItems } from "@/hooks/use-knowledge-items"
+import { ColumnDef } from "@tanstack/react-table"
 
 interface KnowledgeItem extends Record<string, unknown> {
   id: string
@@ -14,11 +15,23 @@ interface KnowledgeItem extends Record<string, unknown> {
   size: string
 }
 
-const columns: { key: keyof KnowledgeItem; label: string }[] = [
-  { key: "title", label: "Title" },
-  { key: "description", label: "Description" },
-  { key: "createdAt", label: "Created At" },
-  { key: "size", label: "Size" },
+const columns: ColumnDef<KnowledgeItem>[] = [
+  {
+    accessorKey: 'title',
+    header: 'Title',
+  },
+  {
+    accessorKey: 'description',
+    header: 'Description',
+  },
+  {
+    accessorKey: 'createdAt',
+    header: 'Created At',
+  },
+  {
+    accessorKey: 'size',
+    header: 'Size',
+  },
 ]
 
 export default function KnowledgePage() {
@@ -30,6 +43,15 @@ export default function KnowledgePage() {
     setSelectedItem(item)
     setIsModalOpen(true)
   }
+
+  const renderContent = (item: KnowledgeItem | null) => (
+    <div>
+      <p><strong>Title:</strong> {item?.title}</p>
+      <p><strong>Description:</strong> {item?.description}</p>
+      <p><strong>Created At:</strong> {item?.createdAt}</p>
+      <p><strong>Size:</strong> {item?.size}</p>
+    </div>
+  )
 
   if (isLoading) return <div>Loading...</div>
   if (error) return <div>Error: {error.message}</div>
@@ -50,6 +72,7 @@ export default function KnowledgePage() {
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
           item={selectedItem}
+          renderContent={renderContent}
         />
       )}
     </div>

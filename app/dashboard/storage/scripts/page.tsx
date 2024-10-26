@@ -5,6 +5,7 @@ import { DataTable } from "@/components/ui/data-table"
 import { Button } from "@/components/ui/button"
 import { ViewModal } from "@/components/ui/view-modal"
 import { useScripts } from "@/hooks/use-scripts"
+import { ColumnDef } from "@tanstack/react-table"
 
 interface Script extends Record<string, unknown> {
   id: string;
@@ -14,12 +15,24 @@ interface Script extends Record<string, unknown> {
   author: string;
 }
 
-const columns: { key: keyof Script; label: string }[] = [
-  { key: "name", label: "Name" },
-  { key: "type", label: "Type" },
-  { key: "lastModified", label: "Last Modified" },
-  { key: "author", label: "Author" },
-];
+const columns: ColumnDef<Script>[] = [
+  {
+    accessorKey: "name",
+    header: "Name",
+  },
+  {
+    accessorKey: "type",
+    header: "Type",
+  },
+  {
+    accessorKey: "lastModified",
+    header: "Last Modified",
+  },
+  {
+    accessorKey: "author",
+    header: "Author",
+  },
+]
 
 export default function ScriptsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -30,6 +43,18 @@ export default function ScriptsPage() {
     setSelectedItem(item)
     setIsModalOpen(true)
   }
+
+  const renderContent = (item: Script | null) => {
+    if (!item) return null;
+    return (
+      <div>
+        <p><strong>Name:</strong> {item.name}</p>
+        <p><strong>Type:</strong> {item.type}</p>
+        <p><strong>Last Modified:</strong> {item.lastModified}</p>
+        <p><strong>Author:</strong> {item.author}</p>
+      </div>
+    );
+  };
 
   if (isLoading) return <div>Loading...</div>
   if (error) return <div>Error: {error.message}</div>
@@ -45,13 +70,12 @@ export default function ScriptsPage() {
         columns={columns}
         onView={handleView}
       />
-      {selectedItem && (
-        <ViewModal<Script>
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          item={selectedItem}
-        />
-      )}
+      <ViewModal<Script>
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        item={selectedItem}
+        renderContent={renderContent}
+      />
     </div>
   )
 }

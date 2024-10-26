@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import {
   Table,
   TableBody,
@@ -12,29 +12,55 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Eye } from "lucide-react"
+import { 
+  ColumnDef, 
+  flexRender, 
+  getCoreRowModel, 
+  useReactTable,
+  Row
+} from "@tanstack/react-table"
 
-interface DataTableProps<T> {
-  data: T[]
-  columns: { key: keyof T; label: string }[]
-  onView: (item: T) => void
+interface DataTableProps<TData> {
+  data: TData[]
+  columns: ColumnDef<TData, unknown>[]
+  onView?: (item: TData) => void
 }
 
-export function DataTable<T>({ data, columns, onView }: DataTableProps<T>) {
+export function DataTable<TData>({ 
+  data, 
+  columns, 
+  onView 
+}: DataTableProps<TData>) {
   const [searchTerm, setSearchTerm] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 10
 
-  const filteredData = data.filter((item) =>
-    columns.some((column) =>
-      String(item[column.key]).toLowerCase().includes(searchTerm.toLowerCase())
-    )
+  const filteredData = useMemo(() => 
+    data.filter((row) =>
+      Object.values(row as Record<string, unknown>).some((value) =>
+        String(value).toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    ),
+    [data, searchTerm]
   )
 
   const pageCount = Math.ceil(filteredData.length / itemsPerPage)
-  const paginatedData = filteredData.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
+  const paginatedData = useMemo(() => 
+    filteredData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage),
+    [filteredData, currentPage]
   )
+
+  const table = useReactTable({
+    data: paginatedData,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+  })
+
+  const handleView = (row: Row<TData>) => {
+    if (onView) {
+      onView(row.original);
+    }
+  };
 
   return (
     <div>
@@ -46,21 +72,32 @@ export function DataTable<T>({ data, columns, onView }: DataTableProps<T>) {
       />
       <Table>
         <TableHeader>
-          <TableRow>
-            {columns.map((column) => (
-              <TableHead key={String(column.key)}>{column.label}</TableHead>
-            ))}
-            <TableHead>Actions</TableHead>
-          </TableRow>
+          {table.getHeaderGroups().map((headerGroup) => (
+            <TableRow key={headerGroup.id}>
+              {headerGroup.headers.map((header) => (
+                <TableHead key={header.id}>
+                  {header.isPlaceholder
+                    ? null
+                    : flexRender(
+                        header.column.columnDef.header,
+                        header.getContext()
+                      )}
+                </TableHead>
+              ))}
+              <TableHead>Actions</TableHead>
+            </TableRow>
+          ))}
         </TableHeader>
         <TableBody>
-          {paginatedData.map((item, index) => (
-            <TableRow key={index}>
-              {columns.map((column) => (
-                <TableCell key={String(column.key)}>{String(item[column.key])}</TableCell>
+          {table.getRowModel().rows.map((row) => (
+            <TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
+              {row.getVisibleCells().map((cell) => (
+                <TableCell key={cell.id}>
+                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                </TableCell>
               ))}
               <TableCell>
-                <Button variant="ghost" size="sm" onClick={() => onView(item)}>
+                <Button variant="ghost" size="sm" onClick={() => handleView(row)}>
                   <Eye className="h-4 w-4" />
                 </Button>
               </TableCell>

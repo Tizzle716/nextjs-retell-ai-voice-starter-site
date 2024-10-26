@@ -5,6 +5,7 @@ import { DataTable } from "@/components/ui/data-table"
 import { Button } from "@/components/ui/button"
 import { ViewModal } from "@/components/ui/view-modal"
 import { useContactsData } from "@/hooks/use-contacts-data"
+import { ColumnDef } from "@tanstack/react-table"
 
 interface ContactData extends Record<string, unknown> {
   id: string
@@ -14,11 +15,23 @@ interface ContactData extends Record<string, unknown> {
   lastInteraction: string
 }
 
-const columns: { key: keyof ContactData; label: string }[] = [
-  { key: "name", label: "Name" },
-  { key: "email", label: "Email" },
-  { key: "phone", label: "Phone" },
-  { key: "lastInteraction", label: "Last Interaction" },
+const columns: ColumnDef<ContactData>[] = [
+  {
+    accessorKey: "name",
+    header: "Name",
+  },
+  {
+    accessorKey: "email",
+    header: "Email",
+  },
+  {
+    accessorKey: "phone",
+    header: "Phone",
+  },
+  {
+    accessorKey: "lastInteraction",
+    header: "Last Interaction",
+  },
 ]
 
 export default function ContactsDataPage() {
@@ -30,6 +43,18 @@ export default function ContactsDataPage() {
     setSelectedItem(item)
     setIsModalOpen(true)
   }
+
+  const renderContent = (item: ContactData | null) => {
+    if (!item) return null; // Gérer le cas où item est null
+    return (
+      <div>
+        <p><strong>Name:</strong> {item.name}</p>
+        <p><strong>Email:</strong> {item.email}</p>
+        <p><strong>Phone:</strong> {item.phone}</p>
+        <p><strong>Last Interaction:</strong> {item.lastInteraction}</p>
+      </div>
+    );
+  };
 
   if (isLoading) return <div>Loading...</div>
   if (error) return <div>Error: {error.message}</div>
@@ -45,13 +70,12 @@ export default function ContactsDataPage() {
         columns={columns}
         onView={handleView}
       />
-      {selectedItem && (
-        <ViewModal<ContactData>
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          item={selectedItem}
-        />
-      )}
+      <ViewModal<ContactData>
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        item={selectedItem}
+        renderContent={renderContent}
+      />
     </div>
   )
 }

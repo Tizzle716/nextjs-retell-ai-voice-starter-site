@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { User } from '@supabase/supabase-js'
 
 import { NavMain } from "@/components/app-sidebar/nav-main"
 import { NavUser } from "@/components/app-sidebar/nav-user"
@@ -16,7 +17,15 @@ import {
 // Move the data object to a separate file, e.g., app-sidebar-data.ts
 import { sidebarData } from "./app-sidebar-data"
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
+  user: User | null;
+  userMetadata?: {
+    avatar_url?: string;
+    full_name?: string;
+  };
+}
+
+export function AppSidebar({ user, userMetadata, ...props }: AppSidebarProps) {
   return (
     <Sidebar variant="floating" collapsible="icon" {...props}>
       <SidebarHeader>
@@ -26,7 +35,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavMain items={sidebarData.navMain} />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={sidebarData.user} />
+        <NavUser user={user} userMetadata={userMetadata} />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

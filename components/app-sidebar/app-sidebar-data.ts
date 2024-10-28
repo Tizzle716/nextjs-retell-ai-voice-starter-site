@@ -11,11 +11,6 @@ import {
   } from "lucide-react"
   
   export const sidebarData = {
-    user: {
-      name: "Thibaut Hook",
-      email: "thibauthook@gmail.com",
-      avatar: "/avatars/shadcn.jpg",
-    },
     teams: [
       {
         name: "ai-consultant.fr",

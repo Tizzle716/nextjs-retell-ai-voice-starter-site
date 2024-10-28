@@ -1,17 +1,33 @@
-"use client"
 
 import React from 'react'
+import { cookies } from 'next/headers'
+import { createClient } from '@/utils/supabase/server'
+import { AppSidebarWrapper } from "@/components/app-sidebar/app-sidebar-wrapper"
+import { redirect } from 'next/navigation'
 import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/app-sidebar/app-sidebar"
 
-export default function DashboardLayout({
+export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  const cookieStore = cookies()
+  const supabase = createClient(cookieStore)
+  
+  const { data: { user }, error } = await supabase.auth.getUser()
+
+  if (error || !user) {
+    redirect('/login')
+  }
+
+  const userMetadata = {
+    avatar_url: user.user_metadata?.avatar_url,
+    full_name: user.user_metadata?.full_name
+  }
+
   return (
     <SidebarProvider>
-      <AppSidebar />
+      <AppSidebarWrapper user={user} userMetadata={userMetadata} />
       <SidebarInset className="min-h-screen">
         <header className="sticky top-0 z-10 bg-white border-b p-4 flex items-center">
           <SidebarTrigger />

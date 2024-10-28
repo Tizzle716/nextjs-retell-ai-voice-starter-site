@@ -12,23 +12,23 @@ import {
   
   export const sidebarData = {
     user: {
-      name: "shadcn",
-      email: "m@example.com",
+      name: "Thibaut Hook",
+      email: "thibauthook@gmail.com",
       avatar: "/avatars/shadcn.jpg",
     },
     teams: [
       {
-        name: "Acme Inc",
+        name: "ai-consultant.fr",
         logo: GalleryVerticalEnd,
         plan: "Enterprise",
       },
       {
-        name: "Acme Corp.",
+        name: "ai-skool.com",
         logo: AudioWaveform,
         plan: "Startup",
       },
       {
-        name: "Evil Corp.",
+        name: "ai-mentor.help",
         logo: Command,
         plan: "Free",
       },
@@ -67,23 +67,23 @@ import {
       },
       {
         title: "Storage",
-        url: "#",
+        url: "/dashboard/storage/",
         icon: Database,
         items: [
-          { title: "Knowledges", url: "#" },
-          { title: "Scripts", url: "#" },
-          { title: "Products", url: "#" },
-          { title: "Contacts-Data", url: "#" },
+          { title: "Knowledges", url: "/dashboard/storage/knowledges" },
+          { title: "Scripts", url: "/dashboard/storage/scripts" },
+          { title: "Products", url: "/dashboard/storage/products" },
+          { title: "Contacts-Data", url: "/dashboard/storage/contacts-data" },
         ],
       },
       {
         title: "Sales",
-        url: "#",
+        url: "/dashboard/sales/",
         icon: DollarSign,
         items: [
-          { title: "Products", url: "#" },
-          { title: "Proposal", url: "#" },
-          { title: "Analysis", url: "#" },
+          { title: "Products", url: "/dashboard/sales/products" },
+          { title: "Proposal", url: "/dashboard/sales/proposal" },
+          { title: "Analysis", url: "/dashboard/sales/analysis" },
         ],
       },
       {

@@ -4,7 +4,7 @@ import { ColumnDef } from "@tanstack/react-table"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
-import { Contact } from "@/app/types/contact"
+import { Contact, Provider } from "@/app/types/contact"
 
 export const columns: ColumnDef<Contact>[] = [
   {
@@ -91,14 +91,21 @@ export const columns: ColumnDef<Contact>[] = [
     header: "Type",
   },
   {
-    accessorKey: "notifications.lastInteraction",
+    accessorKey: "lastInteraction",
     header: "Last Interaction",
     cell: ({ row }) => {
-      const lastInteraction = row.original.notifications.lastInteraction
+      const lastInteraction = row.original.notifications?.lastInteraction
+      
+      if (!lastInteraction) {
+        return <div className="text-muted-foreground">No interaction yet</div>
+      }
+
       return (
-        <div>
-          <div>{lastInteraction.type}</div>
-          <div className="text-sm text-gray-500">{new Date(lastInteraction.date).toLocaleDateString()}</div>
+        <div className="space-y-1">
+          <div className="text-sm font-medium">{lastInteraction.type}</div>
+          <div className="text-xs text-muted-foreground">
+            {new Date(lastInteraction.date).toLocaleDateString()}
+          </div>
         </div>
       )
     },
@@ -110,7 +117,10 @@ export const columns: ColumnDef<Contact>[] = [
   {
     accessorKey: "provider.vip",
     header: "VIP",
-    cell: ({ row }) => row.original.provider.vip ? "Yes" : "No",
+    cell: ({ row }) => {
+      const provider = row.original.provider
+      return provider?.vip ? "Yes" : "No"
+    },
   },
   {
     accessorKey: "comments",
@@ -118,5 +128,47 @@ export const columns: ColumnDef<Contact>[] = [
     cell: ({ row }) => (
       <div className="max-w-xs truncate">{row.original.comments}</div>
     ),
+  },
+  {
+    accessorKey: "provider",
+    header: "Provider",
+    cell: ({ row }) => {
+      const providerData = row.original.provider as (Provider | null)
+      
+      return (
+        <div className="space-y-1">
+          <div className="text-sm">
+            {providerData?.site || "NO"}
+          </div>
+          <div className="text-xs text-muted-foreground">
+            {providerData?.funnel || "NO"}
+          </div>
+        </div>
+      )
+    }
+  },
+  {
+    accessorKey: "tags",
+    header: "Tags",
+    cell: ({ row }) => {
+      const tags: string[] = row.original.tags || []
+      return (
+        <div className="flex flex-wrap gap-1">
+          {tags.map((tag: string) => (
+            <Badge 
+              key={tag} 
+              variant="secondary"
+              className="text-xs"
+            >
+              {tag}
+            </Badge>
+          ))}
+        </div>
+      )
+    },
+    filterFn: (row, id, value: string[]) => {
+      const tags: string[] = row.original.tags || []
+      return value.length === 0 || value.some((tag: string) => tags.includes(tag))
+    },
   },
 ]

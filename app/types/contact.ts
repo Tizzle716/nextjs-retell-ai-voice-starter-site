@@ -1,31 +1,42 @@
 export interface Contact {
   id: string
+  // Champs obligatoires
   name: string
   email: string
   phone: string
-  dateJoined: string
   status: "Lead" | "Prospect" | "Client"
-  score: number
-  type: string
-  notifications: {
-    lastInteraction: {
+  // Champs optionnels
+  dateJoined?: string
+  score?: number
+  type?: string
+  tags?: string[]
+  notifications?: {
+    lastInteraction?: {
       type: "Appel Sortant" | "Appel Entrant" | "Email Entrant"
       date: string
       duration?: number
-      score: number
-    }
-    history: Array<{
-      type: "Appel Sortant" | "Appel Entrant" | "Email Entrant"
+      score?: number
+    } | null
+    history?: Array<{
+      type: string
       date: string
       duration?: number
-      score: number
+      score?: number
     }>
+  } | null
+  provider?: {
+    site?: string
+    funnel?: string
+    call?: string
+    vip?: boolean
   }
-  provider: {
-    site: string
-    funnel: string
-    call: string
-    vip: boolean
-  }
-  comments: string
+  comments?: string
+}
+
+// Type helper pour provider
+export interface Provider {
+  site: string
+  funnel: string
+  call?: string
+  vip?: boolean
 }

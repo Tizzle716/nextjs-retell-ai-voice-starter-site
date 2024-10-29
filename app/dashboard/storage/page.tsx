@@ -1,11 +1,10 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Book, Package, FileText, Users } from "lucide-react"
+import { Package, FileText, Users } from "lucide-react"
 import Link from "next/link"
 
 const categories = [
-  { title: "Knowledge", icon: Book, count: 15, url: "/dashboard/storage/knowledge" },
+  { title: "Documents", icon: FileText, count: 10, url: "/dashboard/storage/documents" },
   { title: "Products", icon: Package, count: 30, url: "/dashboard/storage/products" },
-  { title: "Scripts", icon: FileText, count: 10, url: "/dashboard/storage/scripts" },
   { title: "Contacts-Data", icon: Users, count: 50, url: "/dashboard/storage/contacts-data" },
 ]
 

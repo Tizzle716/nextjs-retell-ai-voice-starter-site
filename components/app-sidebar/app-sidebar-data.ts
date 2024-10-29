@@ -65,8 +65,7 @@ import {
         url: "/dashboard/storage/",
         icon: Database,
         items: [
-          { title: "Knowledges", url: "/dashboard/storage/knowledges" },
-          { title: "Scripts", url: "/dashboard/storage/scripts" },
+          { title: "Documents", url: "/dashboard/storage/documents" },
           { title: "Products", url: "/dashboard/storage/products" },
           { title: "Contacts-Data", url: "/dashboard/storage/contacts-data" },
         ],

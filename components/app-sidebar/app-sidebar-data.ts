@@ -66,7 +66,7 @@ import {
         icon: Database,
         items: [
           { title: "Documents", url: "/dashboard/storage/documents" },
-          { title: "Products", url: "/dashboard/storage/products" },
+          { title: "Products", url: "/dashboard/products" },
           { title: "Contacts-Data", url: "/dashboard/storage/contacts-data" },
         ],
       },
@@ -75,7 +75,7 @@ import {
         url: "/dashboard/sales/",
         icon: DollarSign,
         items: [
-          { title: "Products", url: "/dashboard/sales/products" },
+          { title: "Products", url: "/dashboard/products" },
           { title: "Proposal", url: "/dashboard/sales/proposal" },
           { title: "Analysis", url: "/dashboard/sales/analysis" },
         ],

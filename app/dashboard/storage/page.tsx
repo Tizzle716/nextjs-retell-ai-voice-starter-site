@@ -4,7 +4,7 @@ import Link from "next/link"
 
 const categories = [
   { title: "Documents", icon: FileText, count: 10, url: "/dashboard/storage/documents" },
-  { title: "Products", icon: Package, count: 30, url: "/dashboard/storage/products" },
+  { title: "Products", icon: Package, count: 30, url: "/dashboard/products" },
   { title: "Contacts-Data", icon: Users, count: 50, url: "/dashboard/storage/contacts-data" },
 ]
 

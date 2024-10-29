@@ -5,13 +5,12 @@ import { DataTable } from "@/components/ui/data-table"
 import { Button } from "@/components/ui/button"
 import { ViewModal } from "@/components/ui/view-modal"
 import { useProducts } from "@/hooks/use-products"
-import { ProductForm } from "./product-form"
-import { Product } from "@/app/types/sales"
+import type { Product } from "@/app/types/product"
 import { ColumnDef } from "@tanstack/react-table"
 
 const columns: ColumnDef<Product>[] = [
   {
-    accessorKey: "name",
+    accessorKey: "title",
     header: "Name",
   },
   {
@@ -22,10 +21,8 @@ const columns: ColumnDef<Product>[] = [
     accessorKey: "price",
     header: "Price",
     cell: ({ row }) => {
-      const price = row.original.price;
-      return typeof price === 'number' 
-        ? `$${price.toFixed(2)}` 
-        : `$${parseFloat(price).toFixed(2) || '0.00'}`;
+      const price = row.original.price.base
+      return `$${price.toFixed(2)}`
     },
   },
   {
@@ -59,7 +56,7 @@ export default function ProductsPage() {
         <Button onClick={() => setIsModalOpen(true)}>Add Product</Button>
       </div>
       <DataTable
-        data={products}
+        data={products || []}
         columns={columns}
         onView={handleView}
       />
@@ -67,11 +64,27 @@ export default function ProductsPage() {
         isOpen={isModalOpen}
         onClose={handleCloseModal}
         item={selectedProduct}
-        renderContent={(item) => (
-          <ProductForm
-            product={item}
-            onSave={handleCloseModal}
-          />
+        renderContent={(item) => item && (
+          <div className="space-y-4">
+            <h2 className="text-xl font-bold">{item.title}</h2>
+            <p>{item.description}</p>
+            <p>Price: ${item.price.base.toFixed(2)}</p>
+            {item.price.hasRange && item.price.range && (
+              <p>Range: ${item.price.range.min} - ${item.price.range.max}</p>
+            )}
+            <p>Category: {item.category}</p>
+            <p>Type: {item.type}</p>
+            {item.tags.length > 0 && (
+              <div>
+                <p>Tags:</p>
+                <ul className="list-disc pl-4">
+                  {item.tags.map((tag, index) => (
+                    <li key={index}>{tag}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
         )}
       />
     </div>

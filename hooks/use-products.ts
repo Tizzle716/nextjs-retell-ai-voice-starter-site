@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/utils/supabase/client'
-import { Product } from '@/app/types/product'
+import { Product, DatabaseProduct, transformProductFromDb } from '@/app/types/product'
 
 export function useProducts() {
   const [data, setData] = useState<Product[]>([])
@@ -12,16 +12,25 @@ export function useProducts() {
   const fetchProducts = async () => {
     try {
       setIsLoading(true)
-      const { data, error } = await supabase
+      const { data: dbProducts, error: supabaseError } = await supabase
         .from('products')
         .select('*')
         .order('created_at', { ascending: false })
 
-      if (error) throw error
+      if (supabaseError) throw supabaseError
 
-      setData(data || [])
+      if (dbProducts) {
+        // Conversion explicite et sûre des données
+        const safeDbProducts = dbProducts as unknown as DatabaseProduct[]
+        const products = safeDbProducts.map(transformProductFromDb)
+        setData(products)
+      } else {
+        setData([])
+      }
+      
     } catch (err) {
-      setError(err as Error)
+      console.error('Erreur lors du chargement des produits:', err)
+      setError(err instanceof Error ? err : new Error('Erreur inconnue'))
     } finally {
       setIsLoading(false)
     }
@@ -31,5 +40,10 @@ export function useProducts() {
     fetchProducts()
   }, [])
 
-  return { data, isLoading, error, refetch: fetchProducts }
+  return { 
+    data, 
+    isLoading, 
+    error, 
+    refetch: fetchProducts 
+  }
 }

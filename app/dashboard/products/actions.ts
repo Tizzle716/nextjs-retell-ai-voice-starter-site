@@ -2,21 +2,24 @@
 
 import { createClient } from "@/utils/supabase/server"
 import { cookies } from "next/headers"
-import { ProductFormValues } from "@/app/types/product"
+import { revalidatePath } from "next/cache"
+import { redirect } from "next/navigation"
+import { ProductFormValues, transformProductForDb } from "@/app/types/product"
 
 export async function createProduct(values: ProductFormValues) {
-  'use server'
-  
   const cookieStore = cookies()
   const supabase = createClient(cookieStore)
   
   try {
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
-      throw new Error("Unauthorized")
+      return {
+        error: "Non autorisé",
+        success: false
+      }
     }
     
-    const { data, error } = await supabase
+    const { error: insertError } = await supabase
       .from('products')
       .insert([{
         ...values,
@@ -25,30 +28,71 @@ export async function createProduct(values: ProductFormValues) {
         updated_at: new Date().toISOString()
       }])
 
-    if (error) throw error
+    if (insertError) {
+      return {
+        error: insertError.message,
+        success: false
+      }
+    }
     
-    return { success: true, data }
+    revalidatePath('/dashboard/products')
+    redirect('/dashboard/products')
 
   } catch (error) {
     console.error('Erreur détaillée:', error)
-    throw error
+    return {
+      error: "Une erreur est survenue lors de la création du produit",
+      success: false
+    }
   }
 }
 
 export async function updateProduct(id: string, values: ProductFormValues) {
-  'use server'
-  
   const cookieStore = cookies()
   const supabase = createClient(cookieStore)
 
-  const { error } = await supabase
-    .from("products")
-    .update({
-      ...values,
-      updated_at: new Date().toISOString()
-    })
-    .eq("id", id)
+  try {
+    // Vérifier l'authentification
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
+      return {
+        error: "Non autorisé",
+        success: false
+      }
+    }
 
-  if (error) throw error
-  return { success: true }
+    // Transformer les données pour correspondre au format de la base de données
+    const dbData = transformProductForDb(values)
+
+    // Mise à jour du produit
+    const { error: updateError } = await supabase
+      .from('products')
+      .update({
+        ...dbData,
+        updated_at: new Date().toISOString(),
+        user_id: user.id
+      })
+      .eq('id', id)
+
+    if (updateError) {
+      return {
+        error: updateError.message,
+        success: false
+      }
+    }
+
+    // Revalider le cache pour cette route
+    revalidatePath('/dashboard/products')
+    revalidatePath(`/dashboard/products/${id}`)
+
+    // Rediriger vers la liste des produits
+    redirect('/dashboard/products')
+
+  } catch (error) {
+    console.error('Erreur détaillée:', error)
+    return {
+      error: 'Une erreur est survenue lors de la mise à jour du produit',
+      success: false
+    }
+  }
 }

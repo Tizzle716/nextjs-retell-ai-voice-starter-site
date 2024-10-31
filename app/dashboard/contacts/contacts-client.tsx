@@ -35,9 +35,9 @@ export function ContactsClient() {
 
   const [filters, setFilters] = useState<Filters>({
     search: "",
-    status: "",
-    sortBy: "",
-    sortOrder: "asc",
+    status: null,
+    sortBy: null,
+    sortOrder: null,
     tags: []
   })
 
@@ -47,7 +47,10 @@ export function ContactsClient() {
     error, 
     mutate,
     pagination: contactsPagination
-  } = useContacts(pagination, filters)
+  } = useContacts({
+    pagination,
+    filters
+  })
   
   const { toast } = useToast()
 

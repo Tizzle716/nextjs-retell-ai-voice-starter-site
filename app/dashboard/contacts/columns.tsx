@@ -5,6 +5,25 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Contact, Provider } from "@/app/types/contact"
+import { Button } from "@/components/ui/button"
+import { useRouter } from "next/navigation"
+import { ExternalLink } from "lucide-react"
+
+// Créer un composant React séparé pour la cellule d'action
+const ActionCell = ({ contact }: { contact: Contact }) => {
+  const router = useRouter()
+  
+  return (
+    <Button
+      variant="ghost"
+      size="icon"
+      onClick={() => router.push(`/dashboard/clients/${contact.id}`)}
+      title="View Profile"
+    >
+      <ExternalLink className="h-4 w-4" />
+    </Button>
+  )
+}
 
 export const columns: ColumnDef<Contact>[] = [
   {
@@ -170,5 +189,9 @@ export const columns: ColumnDef<Contact>[] = [
       const tags: string[] = row.original.tags || []
       return value.length === 0 || value.some((tag: string) => tags.includes(tag))
     },
+  },
+  {
+    id: "actions",
+    cell: ({ row }) => <ActionCell contact={row.original} />
   },
 ]

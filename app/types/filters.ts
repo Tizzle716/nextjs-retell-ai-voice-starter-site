@@ -1,9 +1,9 @@
-// Créons d'abord le type Filters
+// Type pour les filtres
 export interface Filters {
-  search: string
-  status: string
-  sortBy: string
-  sortOrder: 'asc' | 'desc'
-  tags: string[]
+  search: string;
+  status: "Lead" | "Prospect" | "Client" | null;
+  tags: string[];
+  sortBy: string | null;
+  sortOrder: "asc" | "desc" | null;
 }
 

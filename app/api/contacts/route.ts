@@ -2,6 +2,8 @@ import { createClient } from "@/utils/supabase/server"
 import { cookies } from "next/headers"
 import { NextResponse } from "next/server"
 import { z } from "zod"
+import { initializeClientProfile } from '@/app/actions/client-profile'
+import { Contact, SupabaseContact } from "@/app/types/contact"
 
 const contactSchema = z.object({
   id: z.string().uuid().optional(),
@@ -32,6 +34,7 @@ const querySchema = z.object({
   sortBy: z.string().optional(),
   sortOrder: z.enum(["asc", "desc"]).optional(),
   tags: z.string().optional(), // Pour filtrer par tags
+  include_interactions: z.enum(['true', 'false']).optional().default('false') // Nouveau paramètre
 })
 
 export async function GET(request: Request) {
@@ -52,13 +55,26 @@ export async function GET(request: Request) {
     const from = (query.page - 1) * query.limit
     const to = from + query.limit - 1
     
+    // Construire la requête de sélection en fonction des paramètres
+    let selectQuery = '*'
+    if (query.include_interactions === 'true') {
+      selectQuery = `
+        *,
+        interactions:contact_interactions(
+          id,
+          type,
+          date,
+          duration,
+          score,
+          created_at
+        )
+      `
+    }
+    
     // Construire la requête de base
     let contactsQuery = supabase
       .from("contacts")
-      .select(`
-        *,
-        interactions:contact_interactions(*)
-      `, { count: "exact" })
+      .select(selectQuery, { count: "exact" })
       .eq('user_id', user.id)
       .range(from, to)
     
@@ -93,17 +109,46 @@ export async function GET(request: Request) {
       }
     }
 
-    const { data, error, count } = await contactsQuery
+    const { data, error, count } = await contactsQuery as {
+      data: SupabaseContact[] | null;
+      error: Error | null;
+      count: number | null;
+    }
 
     if (error) throw error
+    if (!data) return NextResponse.json({ error: "No data found" }, { status: 404 })
+
+    // Maintenant nous sommes sûrs que data est un SupabaseContact[]
+    const transformedData = data.map((contact: SupabaseContact): Contact => {
+      // Créer l'objet notifications
+      const notifications = {
+        lastInteraction: query.include_interactions === 'true' && 
+          Array.isArray(contact.interactions) && 
+          contact.interactions.length > 0 
+            ? {
+                type: contact.interactions[0].type as "Appel Sortant" | "Appel Entrant" | "Email Entrant",
+                date: contact.interactions[0].date,
+                duration: contact.interactions[0].duration,
+                score: contact.interactions[0].score
+              }
+            : null
+      }
+
+      // Retourner un Contact correctement typé
+      return {
+        ...contact,
+        dateJoined: contact.created_at, // Mapping explicite
+        notifications
+      }
+    })
 
     return NextResponse.json({
-      data,
+      data: transformedData,
       pagination: {
-        total: count || 0,
-        pages: Math.ceil((count || 0) / query.limit),
-        current: query.page,
-        limit: query.limit,
+        pageIndex: query.page - 1,
+        pageSize: query.limit,
+        totalPages: Math.ceil((count || 0) / query.limit),
+        totalItems: count || 0
       }
     })
 
@@ -121,7 +166,6 @@ export async function POST(request: Request) {
     const cookieStore = cookies()
     const supabase = createClient(cookieStore)
     
-    // Récupérer l'utilisateur avant de l'utiliser
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
@@ -130,40 +174,41 @@ export async function POST(request: Request) {
     const body = await request.json()
     const validatedContact = contactSchema.parse(body)
     
-    const { data: contact, error: insertError } = await supabase
+    // Ajout du type explicite pour la réponse
+    type ContactResponse = {
+      data: Contact | null;
+      error: Error | null;
+    }
+    
+    const { data: newContact, error: insertError }: ContactResponse = await supabase
       .from("contacts")
       .insert([{
         ...validatedContact,
-        tags: validatedContact.tags || [],
-        user_id: user.id, // Maintenant user est défini
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+        user_id: user.id,
+        created_at: new Date().toISOString()
       }])
-      .select()
+      .select('*')
       .single()
     
-    if (insertError) throw insertError
-
-    // Si des interactions sont fournies, les insérer également
-    if (body.notifications?.lastInteraction) {
-      const { error: interactionError } = await supabase
-        .from("contact_interactions")
-        .insert({
-          contact_id: contact.id,
-          type: body.notifications.lastInteraction.type,
-          date: body.notifications.lastInteraction.date,
-          duration: body.notifications.lastInteraction.duration,
-          score: body.notifications.lastInteraction.score,
-        })
-      
-      if (interactionError) throw interactionError
+    if (insertError || !newContact) {
+      throw insertError || new Error('Failed to create contact')
     }
+
+    // Maintenant TypeScript sait que newContact est de type Contact
+    await initializeClientProfile(supabase, newContact.id, user.id)
     
-    return NextResponse.json({ data: contact })
+    return NextResponse.json({ 
+      data: newContact,
+      message: "Contact and profile created successfully"
+    }, { status: 201 })
+
   } catch (error) {
     console.error("POST /api/contacts error:", error)
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.errors }, { status: 400 })
+      return NextResponse.json({ 
+        error: "Validation error",
+        details: error.errors 
+      }, { status: 400 })
     }
     return NextResponse.json(
       { error: "Failed to create contact" },

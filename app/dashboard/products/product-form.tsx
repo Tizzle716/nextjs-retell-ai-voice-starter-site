@@ -324,6 +324,7 @@ export function ProductForm({ initialData, action }: ProductFormProps) {
               size="icon"
               onClick={addTag}
               disabled={isLoading}
+              aria-label="Ajouter un tag"
             >
               <Plus className="h-4 w-4" />
             </Button>
@@ -337,6 +338,7 @@ export function ProductForm({ initialData, action }: ProductFormProps) {
                   onClick={() => removeTag(tag)}
                   className="ml-2"
                   disabled={isLoading}
+                  aria-label={`Supprimer le tag ${tag}`}
                 >
                   <X className="h-3 w-3" />
                 </button>
@@ -366,6 +368,7 @@ export function ProductForm({ initialData, action }: ProductFormProps) {
               size="icon"
               onClick={addTechnicalSpec}
               disabled={isLoading}
+              aria-label="Ajouter une spécification technique"
             >
               <Plus className="h-4 w-4" />
             </Button>
@@ -383,6 +386,7 @@ export function ProductForm({ initialData, action }: ProductFormProps) {
                   }}
                   className="ml-2"
                   disabled={isLoading}
+                  aria-label={`Supprimer la spécification ${key}`}
                 >
                   <X className="h-3 w-3" />
                 </button>

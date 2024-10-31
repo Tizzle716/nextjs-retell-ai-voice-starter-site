@@ -2,29 +2,30 @@ import { notFound } from "next/navigation"
 import { createClient } from "@/utils/supabase/server"
 import { cookies } from "next/headers"
 import { ProductForm } from "../../product-form"
-import { ProductFormValues } from "@/app/types/product"
+import { ProductFormValues, DatabaseProduct, transformProductFromDb } from "@/app/types/product"
 import { updateProduct } from "../../actions"
 
 export default async function EditProductPage({ params }: { params: { id: string } }) {
   const cookieStore = cookies()
   const supabase = createClient(cookieStore)
 
-  const { data: product, error } = await supabase
+  const { data: dbProduct, error } = await supabase
     .from("products")
     .select("*")
     .eq("id", params.id)
-    .single()
+    .single<DatabaseProduct>()
 
-  if (error || !product) {
+  if (error || !dbProduct) {
     notFound()
   }
+
+  const product = transformProductFromDb(dbProduct)
 
   async function handleUpdate(values: ProductFormValues) {
     'use server'
     return updateProduct(params.id, values)
   }
 
-  // Conversion des données pour le formulaire
   const formInitialData: ProductFormValues = {
     title: product.title,
     description: product.description,

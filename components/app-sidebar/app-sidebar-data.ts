@@ -35,8 +35,6 @@ import {
         icon: Users,
         items: [
           { title: "Leads", url: "/dashboard/contacts/" },
-          { title: "Prospects", url: "/dashboard/contacts/" },
-          { title: "Clients", url: "/dashboard/contacts/" },
         ],
       },
       {

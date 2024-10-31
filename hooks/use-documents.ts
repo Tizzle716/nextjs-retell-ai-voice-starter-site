@@ -4,37 +4,22 @@ import { createClient } from '@/utils/supabase/client'
 
 export function useDocuments() {
   const supabase = createClient()
-
-  // Données mockées pour le développement
-  const mockDocuments: Document[] = [
-    {
-      id: '1',
-      title: 'Guide Construction Maison',
-      content: 'Contenu du guide de construction...',
-      category: 'Construction',
-      subcategory: 'Maison individuelle',
-      file_type: 'PDF',
-      keywords: ['construction', 'maison', 'guide'],
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    },
-    {
-      id: '2',
-      title: 'Rénovation Énergétique',
-      content: 'Guide de rénovation énergétique...',
-      category: 'Energies',
-      subcategory: 'Rénovation',
-      file_type: 'PDF',
-      keywords: ['rénovation', 'énergie', 'isolation'],
-      created_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-      updated_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
-    }
-  ]
+  
+  // Utiliser useSWR pour récupérer les données
+  const { data, error, mutate } = useSWR('documents', async () => {
+    const { data, error } = await supabase
+      .from('documents')
+      .select('*')
+      .order('created_at', { ascending: false })
+    
+    if (error) throw error
+    return data
+  })
 
   return {
-    data: mockDocuments,
-    isLoading: false,
-    error: null,
-    mutate: async () => { /* à implémenter plus tard */ }
+    data,
+    isLoading: !error && !data,
+    error,
+    mutate
   }
 }

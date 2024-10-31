@@ -8,24 +8,39 @@ import { Contact, Provider } from "@/app/types/contact"
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
 import { ExternalLink } from "lucide-react"
+import { Edit } from "lucide-react"
 
-// Créer un composant React séparé pour la cellule d'action
-const ActionCell = ({ contact }: { contact: Contact }) => {
+type ColumnActionsProps = {
+  row: Contact;
+  onEdit: (contact: Contact) => void;
+}
+
+const ColumnActions = ({ row, onEdit }: ColumnActionsProps) => {
   const router = useRouter()
   
   return (
-    <Button
-      variant="ghost"
-      size="icon"
-      onClick={() => router.push(`/dashboard/clients/${contact.id}`)}
-      title="View Profile"
-    >
-      <ExternalLink className="h-4 w-4" />
-    </Button>
+    <div className="flex gap-2">
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={() => router.push(`/dashboard/clients/${row.id}`)}
+        title="View Profile"
+      >
+        <ExternalLink className="h-4 w-4" />
+      </Button>
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={() => onEdit(row)}
+        title="Edit Contact"
+      >
+        <Edit className="h-4 w-4" />
+      </Button>
+    </div>
   )
 }
 
-export const columns: ColumnDef<Contact>[] = [
+export const createColumns = (onEdit: (contact: Contact) => void): ColumnDef<Contact>[] => [
   {
     id: "select",
     header: ({ table }) => (
@@ -46,8 +61,32 @@ export const columns: ColumnDef<Contact>[] = [
     enableHiding: false,
   },
   {
-    accessorKey: "id",
-    header: "ID",
+    accessorKey: "tags",
+    header: "Tags",
+    cell: ({ row }) => {
+      const tags: string[] = row.original.tags || []
+      return (
+        <div className="flex flex-wrap gap-1">
+          {tags.map((tag: string) => (
+            <Badge key={tag} variant="secondary" className="text-xs">
+              {tag}
+            </Badge>
+          ))}
+        </div>
+      )
+    }
+  },
+  {
+    accessorKey: "status",
+    header: "Status",
+    cell: ({ row }) => {
+      const status = row.getValue("status") as Contact['status']
+      return (
+        <Badge variant={status === "Lead" ? "default" : status === "Prospect" ? "secondary" : "outline"}>
+          {status}
+        </Badge>
+      )
+    },
   },
   {
     accessorKey: "name",
@@ -79,18 +118,6 @@ export const columns: ColumnDef<Contact>[] = [
     cell: ({ row }) => new Date(row.getValue("dateJoined")).toLocaleDateString(),
   },
   {
-    accessorKey: "status",
-    header: "Status",
-    cell: ({ row }) => {
-      const status = row.getValue("status") as Contact['status']
-      return (
-        <Badge variant={status === "Lead" ? "default" : status === "Prospect" ? "secondary" : "outline"}>
-          {status}
-        </Badge>
-      )
-    },
-  },
-  {
     accessorKey: "score",
     header: "Score",
     cell: ({ row }) => {
@@ -98,7 +125,7 @@ export const columns: ColumnDef<Contact>[] = [
       return (
         <div className="flex items-center">
           <div className="w-full bg-gray-200 rounded-full h-2.5 mr-2">
-            <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${score}%` }}></div>
+            <div className={`bg-blue-600 h-2.5 rounded-full w-[${score}%]`}></div>
           </div>
           <span>{score}</span>
         </div>
@@ -167,31 +194,7 @@ export const columns: ColumnDef<Contact>[] = [
     }
   },
   {
-    accessorKey: "tags",
-    header: "Tags",
-    cell: ({ row }) => {
-      const tags: string[] = row.original.tags || []
-      return (
-        <div className="flex flex-wrap gap-1">
-          {tags.map((tag: string) => (
-            <Badge 
-              key={tag} 
-              variant="secondary"
-              className="text-xs"
-            >
-              {tag}
-            </Badge>
-          ))}
-        </div>
-      )
-    },
-    filterFn: (row, id, value: string[]) => {
-      const tags: string[] = row.original.tags || []
-      return value.length === 0 || value.some((tag: string) => tags.includes(tag))
-    },
-  },
-  {
     id: "actions",
-    cell: ({ row }) => <ActionCell contact={row.original} />
+    cell: ({ row }) => <ColumnActions row={row.original} onEdit={onEdit} />
   },
 ]

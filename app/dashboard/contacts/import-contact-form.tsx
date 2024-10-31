@@ -13,108 +13,120 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { toast } from "@/hooks/use-toast"
+import { useToast } from "@/hooks/use-toast"
 import { Contact } from "@/app/types/contact"
+import { parse } from 'csv-parse/sync'
 
-// Define the Zod schema for a single contact
-const contactSchema: z.ZodType<Omit<Contact, "id">> = z.object({
-  name: z.string().min(1, "Name is required"),
-  email: z.string().email("Invalid email address"),
-  phone: z.string().min(10, "Phone number must be at least 10 digits"),
-  dateJoined: z.string().datetime(),
-  status: z.enum(["Lead", "Prospect", "Client"]),
-  score: z.number().int().min(0).max(100),
-  type: z.string(),
-  notifications: z.object({
-    lastInteraction: z.object({
-      type: z.enum(["Appel Sortant", "Appel Entrant", "Email Entrant"]),
-      date: z.string().datetime(),
-      duration: z.number().optional(),
-      score: z.number().int().min(0).max(100),
-    }),
-    history: z.array(z.object({
-      type: z.enum(["Appel Sortant", "Appel Entrant", "Email Entrant"]),
-      date: z.string().datetime(),
-      duration: z.number().optional(),
-      score: z.number().int().min(0).max(100),
-    })),
-  }),
-  provider: z.object({
-    site: z.string().url("Invalid URL"),
-    funnel: z.string(),
-    call: z.string(),
-    vip: z.boolean(),
-  }),
-  comments: z.string(),
-})
-
+// Définition du schéma pour le formulaire d'import
 const formSchema = z.object({
   file: z.instanceof(File).refine((file) => file.size <= 5000000, {
     message: "File size should be less than 5MB.",
   }),
 })
 
-export function ImportContactForm() {
+interface ImportContactFormProps {
+  onSubmit: (contacts: Partial<Contact>[]) => Promise<void>
+  onCancel: () => void
+}
+
+// Schéma de validation pour les données CSV
+const csvContactSchema = z.object({
+  name: z.string().min(2),
+  email: z.string().email(),
+  phone: z.string().min(10),
+  status: z.enum(["Lead", "Prospect", "Client"]),
+  type: z.string().optional(),
+  tags: z.array(z.string()).optional(),
+  score: z.number().optional(),
+  provider: z.object({
+    site: z.string().url().optional(),
+    funnel: z.string().optional(),
+    call: z.string().optional(),
+    vip: z.boolean().optional(),
+  }).optional(),
+  comments: z.string().optional(),
+})
+
+export function ImportContactForm({ onSubmit, onCancel }: ImportContactFormProps) {
+  const { toast } = useToast()
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
   })
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  async function handleSubmit(values: z.infer<typeof formSchema>) {
     try {
-      const fileContent = await readFileContent(values.file);
-      const contacts = parseFileContent(fileContent);
+      const fileContent = await readFileContent(values.file)
+      const parsedContacts = parseCSV(fileContent)
       
-      // Validate each contact using the Zod schema
-      const validatedContacts = contacts.map(contact => contactSchema.parse(contact));
+      // Validate each contact
+      const validatedContacts = parsedContacts.map((contact: Partial<Contact>) => {
+        const validated = csvContactSchema.parse(contact)
+        return {
+          ...validated,
+          dateJoined: new Date().toISOString(),
+          notifications: {
+            lastInteraction: null,
+            history: [],
+          },
+          interactions: [],
+        }
+      })
       
-      // TODO: Send validated contacts to the server for import
-      console.log(validatedContacts);
+      await onSubmit(validatedContacts)
+      form.reset()
+      onCancel()
       
       toast({
-        title: "Contacts imported successfully",
-        description: `${validatedContacts.length} contacts have been imported.`,
-      });
+        title: "Success",
+        description: `${validatedContacts.length} contacts imported successfully`,
+      })
     } catch (error) {
       if (error instanceof z.ZodError) {
         toast({
-          title: "Import failed",
-          description: "Some contacts failed validation. Please check your file and try again.",
+          title: "Validation Error",
+          description: "The CSV file contains invalid data. Please check the format.",
           variant: "destructive",
-        });
+        })
       } else {
         toast({
-          title: "Import failed",
-          description: "An error occurred while importing contacts. Please try again.",
+          title: "Import Error",
+          description: "Failed to import contacts. Please try again.",
           variant: "destructive",
-        });
+        })
       }
+      console.error(error)
     }
   }
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
         <FormField
           control={form.control}
           name="file"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Import Contacts</FormLabel>
+              <FormLabel>Import CSV File</FormLabel>
               <FormControl>
                 <Input
                   type="file"
-                  accept=".csv,.xlsx"
+                  accept=".csv"
                   onChange={(e) => field.onChange(e.target.files?.[0])}
                 />
               </FormControl>
               <FormDescription>
-                Upload a CSV or Excel file containing contact information.
+                Upload a CSV file with the following headers: name, email, phone, status, type, tags, score, provider_site, provider_funnel, provider_call, provider_vip, comments
               </FormDescription>
               <FormMessage />
             </FormItem>
           )}
         />
-        <Button type="submit">Import</Button>
+        <div className="flex justify-end space-x-2">
+          <Button type="button" variant="outline" onClick={onCancel}>
+            Cancel
+          </Button>
+          <Button type="submit">Import Contacts</Button>
+        </div>
       </form>
     </Form>
   )
@@ -123,17 +135,49 @@ export function ImportContactForm() {
 // Helper function to read file content
 async function readFileContent(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = (event) => resolve(event.target?.result as string);
-    reader.onerror = (error) => reject(error);
-    reader.readAsText(file);
-  });
+    const reader = new FileReader()
+    reader.onload = (event) => resolve(event.target?.result as string)
+    reader.onerror = (error) => reject(error)
+    reader.readAsText(file)
+  })
 }
 
-// Helper function to parse file content (you'll need to implement this based on your file format)
-function parseFileContent(content: string): Partial<Contact>[] {
-  // TODO: Implement parsing logic for CSV or Excel file
-  // This should return an array of objects that match the Contact interface
-  console.log("Parsing content:", content);
-  return [];
+function parseCSV(content: string): Partial<Contact>[] {
+  const records = parse(content, {
+    columns: true,
+    skip_empty_lines: true,
+    trim: true,
+  })
+  
+  interface CSVRecord {
+    name: string
+    email: string
+    phone: string
+    status: string
+    type?: string
+    tags?: string
+    score?: string
+    provider_site?: string
+    provider_funnel?: string
+    provider_call?: string
+    provider_vip?: string
+    comments?: string
+  }
+  
+  return records.map((record: CSVRecord) => ({
+    name: record.name,
+    email: record.email,
+    phone: record.phone,
+    status: record.status as "Lead" | "Prospect" | "Client",
+    type: record.type,
+    tags: record.tags?.split(',').map((tag: string) => tag.trim()) || [],
+    score: record.score ? parseInt(record.score) : undefined,
+    provider: {
+      site: record.provider_site,
+      funnel: record.provider_funnel,
+      call: record.provider_call,
+      vip: record.provider_vip === 'true',
+    },
+    comments: record.comments,
+  }))
 }

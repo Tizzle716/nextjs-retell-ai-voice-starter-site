@@ -54,21 +54,22 @@ const formSchema = z.object({
   comments: z.string().optional(),
 })
 
-interface AddContactFormProps {
+export interface AddContactFormProps {
+  initialData?: Contact | null
   onSubmit: (data: Partial<Contact>) => Promise<void>
   onCancel: () => void
 }
 
-export function AddContactForm({ onSubmit, onCancel }: AddContactFormProps) {
+export function AddContactForm({ initialData, onSubmit, onCancel }: AddContactFormProps) {
   const { toast } = useToast()
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
+    defaultValues: initialData || {
       name: "",
       email: "",
       phone: "",
       status: "Lead",
-      tags: [], // Initialisation explicite du tableau vide
+      tags: [],
       score: 0,
       type: "",
       provider: {

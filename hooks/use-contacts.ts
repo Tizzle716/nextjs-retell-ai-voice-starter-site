@@ -16,6 +16,7 @@ interface UseContactsReturn {
   isLoading: boolean
   error: Error | null
   mutate: () => Promise<void>
+  editContact: (id: string, data: Partial<Contact>) => Promise<void>
   pagination: Pagination
 }
 
@@ -93,11 +94,31 @@ export function useContacts({
     }
   )
 
+  const editContact = async (id: string, data: Partial<Contact>) => {
+    try {
+      const response = await fetch(`/api/contacts/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      })
+
+      if (!response.ok) throw new Error('Failed to update contact')
+      
+      await mutate() // Revalider les données
+      
+      return response.json()
+    } catch (error) {
+      console.error('Error updating contact:', error)
+      throw error
+    }
+  }
+
   return {
     contacts: data?.data || [],
     isLoading: !error && !data,
     error: error || null,
     mutate: async () => { await mutate() },
+    editContact,
     pagination: {
       pageIndex: data?.pagination.pageIndex ?? pagination.pageIndex,
       pageSize: data?.pagination.pageSize ?? pagination.pageSize,

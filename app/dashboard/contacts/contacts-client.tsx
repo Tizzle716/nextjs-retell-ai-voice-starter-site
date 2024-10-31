@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useCallback } from "react"
-import { columns } from "./columns"
+import { createColumns } from "./columns"
 import { LoadingState } from "./loading-state"
 import { ErrorState } from "./error-state"
 import { EmptyState } from "./empty-state"
@@ -26,6 +26,7 @@ import {
 import { Toolbar } from "./toolbar"
 import { useContacts } from "@/hooks/use-contacts"
 import { useToast } from "@/hooks/use-toast"
+import { EditContactDialog } from "./edit-contact-dialog"
 
 export function ContactsClient() {
   const [pagination, setPagination] = useState<PaginationState>({
@@ -41,12 +42,15 @@ export function ContactsClient() {
     tags: []
   })
 
+  const [selectedContact, setSelectedContact] = useState<Contact | null>(null)
+
   const { 
     contacts, 
     isLoading, 
     error, 
     mutate,
-    pagination: contactsPagination
+    pagination: contactsPagination,
+    editContact
   } = useContacts({
     pagination,
     filters
@@ -54,9 +58,13 @@ export function ContactsClient() {
   
   const { toast } = useToast()
 
+  const handleEditClick = useCallback((contact: Contact) => {
+    setSelectedContact(contact)
+  }, [])
+
   const table = useReactTable({
     data: contacts,
-    columns,
+    columns: createColumns(handleEditClick),
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     pageCount: contactsPagination.totalPages,
@@ -120,14 +128,12 @@ export function ContactsClient() {
     }
   }, [mutate, toast])
 
-  const handleImportContact = useCallback(async (file: File) => {
+  const handleImportContact = useCallback(async (contacts: Partial<Contact>[]) => {
     try {
-      const formData = new FormData()
-      formData.append("file", file)
-      
       const response = await fetch("/api/contacts/import", {
         method: "POST",
-        body: formData,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contacts }),
       })
       
       if (!response.ok) throw new Error("Failed to import contacts")
@@ -147,6 +153,18 @@ export function ContactsClient() {
       })
     }
   }, [mutate, toast])
+
+  const handleEdit = useCallback(async (data: Partial<Contact>) => {
+    try {
+      if (!selectedContact?.id) {
+        throw new Error("No contact selected")
+      }
+      await editContact(selectedContact.id, data)
+      setSelectedContact(null)
+    } catch (error) {
+      console.error('Failed to edit contact:', error)
+    }
+  }, [selectedContact, editContact])
 
   return (
     <div className="space-y-4">
@@ -206,6 +224,13 @@ export function ContactsClient() {
           </Table>
         </div>
       )}
+      
+      <EditContactDialog
+        contact={selectedContact}
+        isOpen={!!selectedContact}
+        onClose={() => setSelectedContact(null)}
+        onEdit={handleEdit}
+      />
     </div>
   )
 }

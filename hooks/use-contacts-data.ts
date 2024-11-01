@@ -1,11 +1,10 @@
 import useSWR from 'swr'
 import { createClient } from '@/utils/supabase/client'
-import { Document } from '@/app/types/document'
+import { ClientDocument, ClientDocumentUploadRequest } from '@/app/types/client-documents'
 
 const supabase = createClient()
 
 export function useContactsData() {
-  // Récupérer les contacts avec leurs documents
   const { data: contacts, error: contactsError, mutate: mutateContacts } = useSWR(
     'contacts',
     async () => {
@@ -15,7 +14,10 @@ export function useContactsData() {
           *,
           client_documents (
             id,
-            document:documents (*)
+            name,
+            type,
+            url,
+            uploaded_at
           )
         `)
         .order('created_at', { ascending: false })
@@ -25,44 +27,33 @@ export function useContactsData() {
     }
   )
 
-  // Upload d'un document pour un contact
-  const uploadDocument = async (contactId: string, file: File, metadata: Partial<Document>) => {
+  const uploadDocument = async (contactId: string, file: File, metadata: Partial<ClientDocumentUploadRequest>) => {
     try {
-      // 1. Upload du fichier dans le bucket
       const fileExt = file.name.split('.').pop()
       const fileName = `${Math.random()}.${fileExt}`
       const filePath = `${contactId}/${fileName}`
 
-      const { error: uploadError } = await supabase.storage
-        .from('documents')
+      const { error: uploadError, data } = await supabase.storage
+        .from('client_documents')
         .upload(filePath, file)
 
       if (uploadError) throw uploadError
 
-      // 2. Créer l'entrée dans la table documents
-      const { data: documentData, error: documentError } = await supabase
-        .from('documents')
-        .insert({
-          ...metadata,
-          file_path: filePath,
-          user_id: (await supabase.auth.getUser()).data.user?.id
-        })
-        .select()
-        .single()
+      const { data: { publicUrl } } = supabase.storage
+        .from('client_documents')
+        .getPublicUrl(filePath)
 
-      if (documentError) throw documentError
-
-      // 3. Créer la liaison dans client_documents
-      const { error: linkError } = await supabase
+      const { error: documentError } = await supabase
         .from('client_documents')
         .insert({
           contact_id: contactId,
-          document_id: documentData.id
+          name: metadata.name,
+          type: metadata.type,
+          url: publicUrl
         })
 
-      if (linkError) throw linkError
+      if (documentError) throw documentError
 
-      // 4. Rafraîchir les données
       mutateContacts()
     } catch (error) {
       console.error('Error uploading document:', error)

@@ -1,4 +1,5 @@
 import * as z from "zod"
+import { interactionSchema } from "@/app/types/interaction"
 
 // Schema pour Provider
 const providerSchema = z.object({
@@ -8,43 +9,24 @@ const providerSchema = z.object({
   vip: z.boolean().optional(),
 })
 
-// Schema pour ContactInteraction
-const contactInteractionSchema = z.object({
-  id: z.string(),
-  type: z.string(),
-  date: z.string(),
-  duration: z.number().optional(),
-  score: z.number().optional(),
-})
-
 // Schema principal pour Contact
 export const contactSchema = z.object({
-  id: z.string().optional(), // Optional car généré par Supabase
+  id: z.string().optional(),
   name: z.string().min(2, "Name must be at least 2 characters"),
   email: z.string().email("Invalid email address"),
   phone: z.string().min(10, "Phone number must be at least 10 digits"),
-  status: z.enum(["Lead", "Prospect", "Client"]),
+  status: z.enum(["lead", "prospect", "client"]),
   dateJoined: z.string().optional(),
   score: z.number().optional(),
   type: z.string().optional(),
   tags: z.array(z.string()).optional(),
   notifications: z.object({
-    lastInteraction: z.object({
-      type: z.enum(["Appel Sortant", "Appel Entrant", "Email Entrant"]),
-      date: z.string(),
-      duration: z.number().optional(),
-      score: z.number().optional(),
-    }).nullable().optional(),
-    history: z.array(z.object({
-      type: z.string(),
-      date: z.string(),
-      duration: z.number().optional(),
-      score: z.number().optional(),
-    })).optional(),
+    lastInteraction: interactionSchema.nullable().optional(),
+    history: z.array(interactionSchema).optional(),
   }).nullable().optional(),
   provider: providerSchema.optional(),
   comments: z.string().optional(),
-  interactions: z.array(contactInteractionSchema).optional(),
+  interactions: z.array(interactionSchema).optional(),
 })
 
 // Schema pour l'import CSV

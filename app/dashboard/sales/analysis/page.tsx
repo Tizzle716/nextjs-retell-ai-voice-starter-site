@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { DataTable } from "@/components/ui/data-table"
 import { Badge } from "@/components/ui/badge"
-import { Proposal } from "@/app/types/sales"
+import { Proposal } from "@/app/types/proposal"
 import { ColumnDef } from "@tanstack/react-table"
 import { useProposals } from "@/hooks/use-proposals"
 
@@ -29,16 +29,25 @@ const columns: ColumnDef<Proposal>[] = [
   {
     accessorKey: "score",
     header: "Score",
-    cell: ({ row }) => (
-      <Badge variant={row.original.score >= 70 ? "success" : "warning"}>
-        {row.original.score}
-      </Badge>
-    ),
+    cell: ({ row }) => {
+      const score = row.original.score
+      if (!score) return <span>-</span>
+
+      return (
+        <Badge variant={score >= 70 ? "success" : "warning"}>
+          {score}
+        </Badge>
+      )
+    },
   },
 ]
 
 export default function AnalysisPage() {
-  const { data: proposals, isLoading, error } = useProposals()
+  const { 
+    proposals,
+    isLoading,
+    error
+  } = useProposals()
   const [selectedProposal, setSelectedProposal] = useState<Proposal | null>(null)
 
   if (isLoading) return <div>Loading...</div>
@@ -46,7 +55,6 @@ export default function AnalysisPage() {
 
   const handleView = (proposal: Proposal) => {
     setSelectedProposal(proposal)
-    // Logic to display proposal details
     console.log("Viewing proposal:", proposal)
   }
 
@@ -59,7 +67,7 @@ export default function AnalysisPage() {
         </CardHeader>
         <CardContent>
           <DataTable
-            data={proposals}
+            data={proposals || []}
             columns={columns}
             onView={handleView}
           />

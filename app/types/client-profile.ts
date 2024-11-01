@@ -41,9 +41,8 @@ export interface ClientProfile {
   name: string
   email: string
   phone?: string
-  status: ClientStatus
-  company?: CompanyInfo
-  notifications?: Notifications | null
+  company?: string
+  status: string
   created_at: string
   updated_at: string
 }

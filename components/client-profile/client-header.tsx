@@ -20,18 +20,10 @@ export function ClientHeader({ client, onEdit }: ClientHeaderProps) {
         <div>
           <h1 className="text-3xl font-bold">{client.name}</h1>
           {client.company && (
-            <p className="text-xl text-muted-foreground">{client.company.name}</p>
+            <p className="text-xl text-muted-foreground">{client.company}</p>
           )}
           <div className="flex space-x-2 mt-2">
             <Badge>{client.status}</Badge>
-            {client.notifications?.lastInteraction?.score && (
-              <Badge variant="outline">
-                Score: {client.notifications.lastInteraction.score}
-              </Badge>
-            )}
-            {client.company?.industry && (
-              <Badge variant="secondary">{client.company.industry}</Badge>
-            )}
           </div>
         </div>
       </div>

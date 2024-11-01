@@ -1,29 +1,4 @@
-// Types pour les interactions
-export interface ContactInteraction {
-  id: string;
-  type: string;
-  date: string;
-  duration?: number;
-  score?: number;
-}
-
-// Type pour les données brutes de Supabase
-export interface SupabaseContact {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  status: "Lead" | "Prospect" | "Client";
-  type?: string;
-  tags?: string[];
-  score?: number;
-  provider?: Provider;
-  comments?: string;
-  created_at: string;
-  updated_at?: string;
-  user_id: string;
-  interactions?: ContactInteraction[];
-}
+import { Interaction } from "./interaction"
 
 // Type pour le provider
 export interface Provider {
@@ -33,34 +8,43 @@ export interface Provider {
   vip?: boolean;
 }
 
-// Type principal pour un contact
-export interface Contact {
+// Type pour les données brutes de Supabase
+export interface SupabaseContact {
   id: string;
-  // Champs obligatoires
   name: string;
   email: string;
   phone: string;
-  status: "Lead" | "Prospect" | "Client";
-  // Champs optionnels
-  dateJoined?: string;
-  score?: number;
+  status: "lead" | "prospect" | "client";
   type?: string;
   tags?: string[];
-  notifications?: {
-    lastInteraction?: {
-      type: "Appel Sortant" | "Appel Entrant" | "Email Entrant";
-      date: string;
-      duration?: number;
-      score?: number;
-    } | null;
-    history?: Array<{
-      type: string;
-      date: string;
-      duration?: number;
-      score?: number;
-    }>;
-  } | null;
+  score?: number;
   provider?: Provider;
   comments?: string;
-  interactions?: ContactInteraction[];
+  created_at: string;
+  updated_at?: string;
+  user_id: string;
+  interactions?: Interaction[];
+}
+
+// Type principal pour un contact
+export interface Contact {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  company?: string;
+  status: 'lead' | 'prospect' | 'client';
+  tags: string[];
+  notes?: string;
+  created_at: string;
+  updated_at?: string;
+  user_id: string;
+  provider?: Provider;
+  score?: number;
+  dateJoined?: string;
+  comments?: string;
+  notifications?: {
+    lastInteraction: Interaction | null;
+    history: Interaction[];
+  };
 }

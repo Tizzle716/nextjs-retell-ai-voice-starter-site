@@ -34,7 +34,7 @@ const csvContactSchema = z.object({
   name: z.string().min(2),
   email: z.string().email(),
   phone: z.string().min(10),
-  status: z.enum(["Lead", "Prospect", "Client"]),
+  status: z.enum(["lead", "prospect", "client"]),
   type: z.string().optional(),
   tags: z.array(z.string()).optional(),
   score: z.number().optional(),
@@ -115,7 +115,7 @@ export function ImportContactForm({ onSubmit, onCancel }: ImportContactFormProps
                 />
               </FormControl>
               <FormDescription>
-                Upload a CSV file with the following headers: name, email, phone, status, type, tags, score, provider_site, provider_funnel, provider_call, provider_vip, comments
+                Upload a CSV file with the following headers: name, email, phone, status (lead/prospect/client), type, tags, score, provider_site, provider_funnel, provider_call, provider_vip, comments
               </FormDescription>
               <FormMessage />
             </FormItem>
@@ -168,7 +168,7 @@ function parseCSV(content: string): Partial<Contact>[] {
     name: record.name,
     email: record.email,
     phone: record.phone,
-    status: record.status as "Lead" | "Prospect" | "Client",
+    status: record.status.toLowerCase() as "lead" | "prospect" | "client",
     type: record.type,
     tags: record.tags?.split(',').map((tag: string) => tag.trim()) || [],
     score: record.score ? parseInt(record.score) : undefined,

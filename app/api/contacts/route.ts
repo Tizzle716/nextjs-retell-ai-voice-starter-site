@@ -60,13 +60,15 @@ export async function GET(request: Request) {
     if (query.include_interactions === 'true') {
       selectQuery = `
         *,
-        interactions:contact_interactions(
+        interactions(
           id,
           type,
           date,
           duration,
           score,
-          created_at
+          metadata,
+          created_at,
+          updated_at
         )
       `
     }
@@ -120,25 +122,21 @@ export async function GET(request: Request) {
 
     // Maintenant nous sommes sûrs que data est un SupabaseContact[]
     const transformedData = data.map((contact: SupabaseContact): Contact => {
-      // Créer l'objet notifications
+      // Créer l'objet notifications avec l'interaction complète
       const notifications = {
-        lastInteraction: query.include_interactions === 'true' && 
-          Array.isArray(contact.interactions) && 
-          contact.interactions.length > 0 
-            ? {
-                type: contact.interactions[0].type as "Appel Sortant" | "Appel Entrant" | "Email Entrant",
-                date: contact.interactions[0].date,
-                duration: contact.interactions[0].duration,
-                score: contact.interactions[0].score
-              }
-            : null
+        lastInteraction: contact.interactions?.[0] || null,
+        history: contact.interactions || []
       }
 
       // Retourner un Contact correctement typé
       return {
         ...contact,
-        dateJoined: contact.created_at, // Mapping explicite
-        notifications
+        company: '',
+        dateJoined: contact.created_at,
+        notifications,
+        status: contact.status.toLowerCase() as 'lead' | 'prospect' | 'client',
+        tags: contact.tags || [],
+        updated_at: contact.updated_at || contact.created_at
       }
     })
 

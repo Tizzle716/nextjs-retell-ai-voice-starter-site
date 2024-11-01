@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
 import { ExternalLink } from "lucide-react"
 import { Edit } from "lucide-react"
+import { formatters } from "@/app/types/client-profile"
 
 type ColumnActionsProps = {
   row: Contact;
@@ -38,6 +39,21 @@ const ColumnActions = ({ row, onEdit }: ColumnActionsProps) => {
       </Button>
     </div>
   )
+}
+
+const getStatusVariant = (status: Contact['status']) => {
+  switch (status) {
+    case 'lead':
+      return 'default'
+    case 'prospect':
+      return 'secondary'
+    default:
+      return 'outline'
+  }
+}
+
+const capitalizeFirstLetter = (str: string) => {
+  return str.charAt(0).toUpperCase() + str.slice(1)
 }
 
 export const createColumns = (onEdit: (contact: Contact) => void): ColumnDef<Contact>[] => [
@@ -82,8 +98,8 @@ export const createColumns = (onEdit: (contact: Contact) => void): ColumnDef<Con
     cell: ({ row }) => {
       const status = row.getValue("status") as Contact['status']
       return (
-        <Badge variant={status === "Lead" ? "default" : status === "Prospect" ? "secondary" : "outline"}>
-          {status}
+        <Badge variant={getStatusVariant(status)}>
+          {capitalizeFirstLetter(status)}
         </Badge>
       )
     },
@@ -137,20 +153,25 @@ export const createColumns = (onEdit: (contact: Contact) => void): ColumnDef<Con
     header: "Type",
   },
   {
-    accessorKey: "lastInteraction",
-    header: "Last Interaction",
+    accessorKey: "notifications.lastInteraction",
+    header: "Dernière Interaction",
     cell: ({ row }) => {
       const lastInteraction = row.original.notifications?.lastInteraction
       
       if (!lastInteraction) {
-        return <div className="text-muted-foreground">No interaction yet</div>
+        return <div className="text-muted-foreground">Aucune interaction</div>
       }
 
       return (
         <div className="space-y-1">
-          <div className="text-sm font-medium">{lastInteraction.type}</div>
+          <Badge variant={
+            lastInteraction.type === "Appel Entrant" ? "default" :
+            lastInteraction.type === "Appel Sortant" ? "secondary" : "outline"
+          }>
+            {lastInteraction.type}
+          </Badge>
           <div className="text-xs text-muted-foreground">
-            {new Date(lastInteraction.date).toLocaleDateString()}
+            {formatters.formatDate(lastInteraction.date)}
           </div>
         </div>
       )

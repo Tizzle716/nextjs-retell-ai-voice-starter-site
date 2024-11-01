@@ -17,12 +17,7 @@ export function ClientProfileEditForm({ client, onSubmit }: ClientProfileEditFor
     resolver: zodResolver(clientProfileSchema),
     defaultValues: {
       ...client,
-      company: client.company || {
-        name: "",
-        industry: "",
-        website: "",
-        linkedin: ""
-      }
+      company: client.company || ""
     }
   })
 
@@ -94,67 +89,6 @@ export function ClientProfileEditForm({ client, onSubmit }: ClientProfileEditFor
               </FormItem>
             )}
           />
-        </div>
-
-        <div className="space-y-4">
-          <h3 className="text-lg font-medium">Informations entreprise</h3>
-          <div className="grid grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="company.name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Company</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="company.industry"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Sector</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="company.website"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Site web</FormLabel>
-                  <FormControl>
-                    <Input {...field} type="url" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="company.linkedin"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>LinkedIn</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
         </div>
 
         <div className="flex justify-end space-x-2">

@@ -74,7 +74,7 @@ import {
         icon: DollarSign,
         items: [
           { title: "Products", url: "/dashboard/products" },
-          { title: "Proposal", url: "/dashboard/sales/proposal" },
+          { title: "Proposal", url: "/dashboard/sales/proposals" },
           { title: "Analysis", url: "/dashboard/sales/analysis" },
         ],
       },

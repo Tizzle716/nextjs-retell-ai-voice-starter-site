@@ -39,7 +39,7 @@ const formSchema = z.object({
   phone: z.string().min(10, {
     message: "Phone number must be at least 10 digits.",
   }),
-  status: z.enum(["Lead", "Prospect", "Client"]),
+  status: z.enum(["lead", "prospect", "client"]),
   
   // Champs optionnels
   tags: z.array(z.string()).default([]),
@@ -68,7 +68,7 @@ export function AddContactForm({ initialData, onSubmit, onCancel }: AddContactFo
       name: "",
       email: "",
       phone: "",
-      status: "Lead",
+      status: "lead",
       tags: [],
       score: 0,
       type: "",
@@ -175,9 +175,9 @@ export function AddContactForm({ initialData, onSubmit, onCancel }: AddContactFo
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="Lead">Lead</SelectItem>
-                        <SelectItem value="Prospect">Prospect</SelectItem>
-                        <SelectItem value="Client">Client</SelectItem>
+                        <SelectItem value="lead">Lead</SelectItem>
+                        <SelectItem value="prospect">Prospect</SelectItem>
+                        <SelectItem value="client">Client</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />

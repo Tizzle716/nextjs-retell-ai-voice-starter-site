@@ -89,11 +89,7 @@ export function ContactsClient() {
         ...data,
         dateJoined: new Date().toISOString(),
         notifications: {
-          lastInteraction: {
-            type: "Email Entrant",
-            date: new Date().toISOString(),
-            score: 0,
-          },
+          lastInteraction: null,
           history: []
         },
         provider: {
@@ -111,6 +107,22 @@ export function ContactsClient() {
       })
       
       if (!response.ok) throw new Error("Failed to add contact")
+      
+      const { data: createdContact } = await response.json()
+
+      if (createdContact.id) {
+        await fetch("/api/interactions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contact_id: createdContact.id,
+            type: "Email Entrant",
+            date: new Date().toISOString(),
+            score: 0,
+            metadata: { initial: true }
+          })
+        })
+      }
       
       await mutate()
       

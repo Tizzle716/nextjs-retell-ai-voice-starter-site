@@ -1,5 +1,5 @@
-import { UseClientDocumentsReturn, ClientDocument } from '@/app/types/client-profile'
-import { DatabaseDocument } from '@/app/types/documents'
+import { UseClientDocumentsReturn } from '@/app/types/client-profile'
+import { ClientDocument } from '@/app/types/client-documents'
 import { createClient } from '@/utils/supabase/client'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 
@@ -7,7 +7,7 @@ export function useClientDocuments(clientId: string): UseClientDocumentsReturn {
   const supabase = createClient()
   const queryClient = useQueryClient()
 
-  const fetchDocuments = async () => {
+  const fetchDocuments = async (): Promise<ClientDocument[]> => {
     const { data, error } = await supabase
       .from('client_documents')
       .select('*')
@@ -15,17 +15,16 @@ export function useClientDocuments(clientId: string): UseClientDocumentsReturn {
 
     if (error) throw error
 
-    return (data as DatabaseDocument[]).map(doc => ({
+    return data.map(doc => ({
       id: doc.id,
+      contact_id: doc.contact_id,
       name: doc.name,
       type: doc.type,
-      size: 0,
-      uploadedAt: doc.created_at,
-      metadata: {
-        contentType: doc.type,
-        lastModified: doc.updated_at
-      }
-    })) as ClientDocument[]
+      url: doc.url,
+      uploadedAt: doc.uploaded_at,
+      created_at: doc.created_at,
+      updated_at: doc.updated_at
+    })) as unknown as ClientDocument[]
   }
 
   const { data, isLoading, error } = useQuery({

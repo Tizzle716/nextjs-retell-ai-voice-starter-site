@@ -1,39 +1,207 @@
-import { useState, useEffect } from 'react';
-import { Proposal } from '@/app/types/sales';
+import { useState } from "react"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { createClient } from '@/utils/supabase/client'
+import { Proposal } from "@/app/types/proposal"
+import { toast } from "@/hooks/use-toast"
 
-// Cette fonction simule un appel API
-const fetchProposals = async (): Promise<Proposal[]> => {
-  // Simulons un délai de réseau
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  
-  // Retournons des données factices avec les nouveaux statuts
-  return [
-    { id: '1', title: 'Proposal A', client: 'Client X', date: '2023-05-01', status: 'sent', score: 75, createdAt: '2023-04-30T10:00:00Z', updatedAt: '2023-05-01T09:00:00Z' },
-    { id: '2', title: 'Proposal B', client: 'Client Y', date: '2023-05-15', status: 'accepted', score: 90, createdAt: '2023-05-10T14:00:00Z', updatedAt: '2023-05-15T11:30:00Z' },
-    { id: '3', title: 'Proposal C', client: 'Client Z', date: '2023-05-30', status: 'rejected', score: 60, createdAt: '2023-05-28T16:00:00Z', updatedAt: '2023-05-30T10:15:00Z' },
-    // Ajoutez plus de propositions factices si nécessaire
-  ];
-};
+// Types
+interface ProposalFormValues {
+  contact_id: string
+  items: Array<{
+    product_id: string
+    quantity: number
+    unit_price: number
+  }>
+  tax: number
+  deadline: string
+  status: 'draft' | 'sent' | 'accepted' | 'rejected'
+}
+
+// Helpers
+const buildProposalQuery = (filters: any) => {
+  const supabase = createClient()
+  let query = supabase
+    .from("client_proposals")
+    .select("*, contact:contacts(*)")
+
+  if (filters?.status && filters.status !== "all") {
+    query = query.eq("status", filters.status)
+  }
+
+  if (filters?.dateRange && filters.dateRange !== "all") {
+    const date = new Date()
+    switch (filters.dateRange) {
+      case "today":
+        date.setHours(0, 0, 0, 0)
+        query = query.gte("created_at", date.toISOString())
+        break
+      case "week":
+        date.setDate(date.getDate() - 7)
+        query = query.gte("created_at", date.toISOString())
+        break
+      case "month":
+        date.setMonth(date.getMonth() - 1)
+        query = query.gte("created_at", date.toISOString())
+        break
+    }
+  }
+
+  return query.order("created_at", { ascending: false })
+}
+
+const handleError = (error: any) => {
+  console.error("Operation failed:", error)
+  toast({
+    variant: "destructive",
+    title: "Erreur",
+    description: "Une erreur est survenue"
+  })
+}
 
 export function useProposals() {
-  const [data, setData] = useState<Proposal[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+  const supabase = createClient()
+  const queryClient = useQueryClient()
+  const [filters, setFilters] = useState({
+    status: "all",
+    dateRange: "all",
+  })
 
-  useEffect(() => {
-    const loadProposals = async () => {
-      try {
-        const proposals = await fetchProposals();
-        setData(proposals);
-        setIsLoading(false);
-      } catch (err) {
-        setError(err instanceof Error ? err : new Error('An unknown error occurred'));
-        setIsLoading(false);
+  // Fetch proposals
+  const {
+    data: proposals,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ["proposals", filters],
+    queryFn: async () => {
+      const query = buildProposalQuery(filters)
+      const { data, error } = await query
+      
+      if (error) throw error
+      return data as Proposal[]
+    },
+  })
+
+  // Create proposal
+  const createProposal = useMutation({
+    mutationFn: async (values: ProposalFormValues) => {
+      const { data, error } = await supabase
+        .from("client_proposals")
+        .insert([values])
+        .select()
+        .single()
+
+      if (error) throw error
+      return data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["proposals"] })
+      toast({
+        title: "Succès",
+        description: "Devis créé avec succès"
+      })
+    },
+    onError: handleError
+  })
+
+  // Update proposal
+  const updateProposal = useMutation({
+    mutationFn: async ({ id, values }: { id: string; values: Partial<ProposalFormValues> }) => {
+      const { data, error } = await supabase
+        .from("client_proposals")
+        .update(values)
+        .eq("id", id)
+        .select()
+        .single()
+
+      if (error) throw error
+      return data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["proposals"] })
+      toast({
+        title: "Succès",
+        description: "Devis mis à jour avec succès"
+      })
+    },
+    onError: handleError
+  })
+
+  // Duplicate proposal
+  const duplicateProposal = useMutation({
+    mutationFn: async (proposal: Proposal) => {
+      const newProposal = {
+        ...proposal,
+        id: undefined,
+        status: "draft",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       }
-    };
 
-    loadProposals();
-  }, []);
+      const { data, error } = await supabase
+        .from("client_proposals")
+        .insert([newProposal])
+        .select()
+        .single()
 
-  return { data, isLoading, error };
-}
+      if (error) throw error
+      return data
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["proposals"] })
+      toast({
+        title: "Succès",
+        description: "Devis dupliqué avec succès"
+      })
+    },
+    onError: (error) => {
+      console.error("Duplication failed:", error)
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: "Erreur lors de la duplication du devis"
+      })
+    }
+  })
+
+  // Delete proposal
+  const deleteProposal = useMutation({
+    mutationFn: async (proposal: Proposal) => {
+      const { error } = await supabase
+        .from("client_proposals")
+        .delete()
+        .eq("id", proposal.id)
+
+      if (error) throw error
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["proposals"] })
+      toast({
+        title: "Succès",
+        description: "Devis supprimé avec succès"
+      })
+    },
+    onError: (error) => {
+      console.error("Deletion failed:", error)
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: "Erreur lors de la suppression du devis"
+      })
+    }
+  })
+
+  return {
+    proposals,
+    isLoading,
+    error,
+    filters,
+    setFilters,
+    duplicateProposal: duplicateProposal.mutate,
+    deleteProposal: deleteProposal.mutate,
+    createProposal: createProposal.mutate,
+    updateProposal: updateProposal.mutate,
+    isDuplicating: duplicateProposal.isPending,
+    isDeleting: deleteProposal.isPending
+  }
+} 

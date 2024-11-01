@@ -1,10 +1,15 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Phone, Mail } from 'lucide-react'
+import { Phone, Mail, Edit } from 'lucide-react'
 import { ClientProfile } from "@/app/types/client-profile"
 
-export function ClientHeader({ client }: { client: ClientProfile }) {
+interface ClientHeaderProps {
+  client: ClientProfile
+  onEdit: () => void
+}
+
+export function ClientHeader({ client, onEdit }: ClientHeaderProps) {
   return (
     <div className="flex justify-between items-start">
       <div className="flex items-center space-x-4">
@@ -31,6 +36,9 @@ export function ClientHeader({ client }: { client: ClientProfile }) {
         </div>
       </div>
       <div className="space-x-2">
+        <Button variant="outline" onClick={onEdit}>
+          <Edit className="mr-2 h-4 w-4" /> Modifier
+        </Button>
         {client.phone && (
           <Button variant="outline">
             <Phone className="mr-2 h-4 w-4" /> Appeler

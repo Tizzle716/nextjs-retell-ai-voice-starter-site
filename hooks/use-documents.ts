@@ -1,25 +1,33 @@
-import useSWR from 'swr'
-import { Document } from '@/app/types/document'
 import { createClient } from '@/utils/supabase/client'
+import { Document, DocumentWithVector } from '@/app/types/document'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 
 export function useDocuments() {
   const supabase = createClient()
-  
-  // Utiliser useSWR pour récupérer les données
-  const { data, error, mutate } = useSWR('documents', async () => {
+  const queryClient = useQueryClient()
+
+  const fetchDocuments = async () => {
+    console.log('Fetching documents...')
     const { data, error } = await supabase
       .from('documents')
       .select('*')
       .order('created_at', { ascending: false })
-    
+
+    console.log('Fetched data:', data)
     if (error) throw error
-    return data
+    return data as Document[]
+  }
+
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['rag-documents'],
+    queryFn: fetchDocuments
   })
 
+  console.log('Hook data:', data)
+
   return {
-    data,
-    isLoading: !error && !data,
-    error,
-    mutate
+    documents: data || [],
+    isLoading,
+    error
   }
 }

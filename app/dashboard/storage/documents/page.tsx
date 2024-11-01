@@ -13,10 +13,14 @@ import {
   DialogTitle 
 } from "@/components/ui/dialog"
 import { ColumnDef } from "@tanstack/react-table"
+import { useQueryClient } from '@tanstack/react-query'
 
 export default function DocumentsPage() {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false)
-  const { data: documents, isLoading, mutate } = useDocuments()
+  const { documents, isLoading, error } = useDocuments()
+  const queryClient = useQueryClient()
+
+  console.log('Page documents:', documents)
 
   const columns: ColumnDef<Document>[] = [
     {
@@ -66,7 +70,8 @@ export default function DocumentsPage() {
         throw new Error('Upload failed');
       }
 
-      await mutate();
+      await queryClient.invalidateQueries({ queryKey: ['rag-documents'] })
+      setIsUploadModalOpen(false)
     } catch (error) {
       console.error('Upload error:', error);
       throw error;
@@ -77,7 +82,27 @@ export default function DocumentsPage() {
     setIsUploadModalOpen(false);
   };
 
-  if (isLoading) return <div>Loading...</div>
+  if (error) {
+    return (
+      <div className="container mx-auto p-6">
+        <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-md">
+          Erreur de chargement: {error.message}
+        </div>
+      </div>
+    )
+  }
+
+  if (isLoading) {
+    return (
+      <div className="container mx-auto p-6">
+        <div className="flex items-center justify-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
+        </div>
+      </div>
+    )
+  }
+
+  const hasDocuments = documents && documents.length > 0
 
   return (
     <div className="container mx-auto p-6">
@@ -88,10 +113,16 @@ export default function DocumentsPage() {
         </Button>
       </div>
 
-      <DataTable
-        data={documents || []}
-        columns={columns}
-      />
+      {!hasDocuments ? (
+        <div className="text-center py-10 text-gray-500">
+          Aucun document trouvé. Commencez par en uploader un.
+        </div>
+      ) : (
+        <DataTable
+          data={documents}
+          columns={columns}
+        />
+      )}
 
       <Dialog open={isUploadModalOpen} onOpenChange={setIsUploadModalOpen}>
         <DialogContent className="sm:max-w-[425px]">

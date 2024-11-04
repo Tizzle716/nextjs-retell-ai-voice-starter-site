@@ -41,7 +41,7 @@ export interface ClientProfile {
   name: string
   email: string
   phone?: string
-  company?: string
+  company?: string | CompanyInfo
   status: string
   created_at: string
   updated_at: string

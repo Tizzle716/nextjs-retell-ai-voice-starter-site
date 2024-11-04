@@ -1,15 +1,16 @@
 "use client"
 
+import { useRouter } from 'next/navigation'
 import { useProposals } from "@/hooks/use-proposals"
 import { ProposalsTable } from "./proposals-table"
 import { Proposal } from "@/app/types/proposal"
 
 interface ProposalsWrapperProps {
   initialData: Proposal[]
-  onEdit: (proposal: Proposal) => void
 }
 
-export function ProposalsWrapper({ initialData, onEdit }: ProposalsWrapperProps) {
+export function ProposalsWrapper({ initialData }: ProposalsWrapperProps) {
+  const router = useRouter()
   const {
     duplicateProposal,
     deleteProposal,
@@ -17,12 +18,16 @@ export function ProposalsWrapper({ initialData, onEdit }: ProposalsWrapperProps)
     isDeleting
   } = useProposals()
 
+  const handleEdit = (proposal: Proposal) => {
+    router.push(`/dashboard/sales/proposals/${proposal.id}/edit`)
+  }
+
   return (
     <ProposalsTable
       data={initialData}
       onDuplicate={duplicateProposal}
       onDelete={deleteProposal}
-      onEdit={onEdit}
+      onEdit={handleEdit}
       isLoading={isDuplicating || isDeleting}
     />
   )

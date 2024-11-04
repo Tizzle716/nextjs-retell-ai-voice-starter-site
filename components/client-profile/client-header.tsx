@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Phone, Mail, Edit } from 'lucide-react'
 import { ClientProfile } from "@/app/types/client-profile"
+import { getCompanyName } from "@/utils/company"
 
 interface ClientHeaderProps {
   client: ClientProfile
@@ -20,7 +21,9 @@ export function ClientHeader({ client, onEdit }: ClientHeaderProps) {
         <div>
           <h1 className="text-3xl font-bold">{client.name}</h1>
           {client.company && (
-            <p className="text-xl text-muted-foreground">{client.company}</p>
+            <p className="text-xl text-muted-foreground">
+              {getCompanyName(client.company)}
+            </p>
           )}
           <div className="flex space-x-2 mt-2">
             <Badge>{client.status}</Badge>

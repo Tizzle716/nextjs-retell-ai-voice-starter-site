@@ -59,7 +59,6 @@ export default async function ProposalsPage() {
       >
         <ProposalsWrapper 
           initialData={proposals || []}
-          onEdit={(proposal) => `/dashboard/sales/proposals/${proposal.id}/edit`}
         />
       </Suspense>
     </div>

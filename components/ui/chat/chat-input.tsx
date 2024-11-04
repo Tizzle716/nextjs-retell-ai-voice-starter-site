@@ -2,7 +2,14 @@ import * as React from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 
-interface ChatInputProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement>{}
+// On peut soit supprimer l'interface si on n'a pas de props supplémentaires
+type ChatInputProps = React.TextareaHTMLAttributes<HTMLTextAreaElement>;
+
+// Ou ajouter des props spécifiques si nécessaire
+// interface ChatInputProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
+//   onSend?: (message: string) => void;
+//   isLoading?: boolean;
+// }
 
 const ChatInput = React.forwardRef<HTMLTextAreaElement, ChatInputProps>(
   ({ className, ...props }, ref) => (

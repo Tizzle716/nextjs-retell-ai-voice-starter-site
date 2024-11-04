@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { ClientProfile, formatters, CompanyInfo } from "@/app/types/client-profile"
+import { ClientProfile, formatters } from "@/app/types/client-profile"
 import { Phone, Mail, MapPin, Building2 } from 'lucide-react'
 import { getCompanyInfo } from "@/utils/company"
 

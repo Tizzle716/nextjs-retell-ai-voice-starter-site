@@ -1,99 +1,15 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
-import { createClient } from '@/utils/supabase/client'
+import { useRef } from "react"
 import { ChatBubble, ChatBubbleAvatar, ChatBubbleMessage } from "@/components/ui/chat/chat-bubble"
 import { ChatInput } from "@/components/ui/chat/chat-input"
 import { Button } from "@/components/ui/button"
 import { Paperclip, Mic, CornerDownLeft } from "lucide-react"
-
-interface Message {
-  id: string
-  role: "user" | "assistant"
-  content: string
-  timestamp: string
-  conversation_id?: string
-}
+import { useAIChat } from "@/hooks/use-ai-chat"
 
 export function AIAgentChat() {
-  const [messages, setMessages] = useState<Message[]>([])
-  const [isLoading, setIsLoading] = useState(false)
-  const [conversationId, setConversationId] = useState<string>()
+  const { messages, isLoading, sendMessage } = useAIChat()
   const messagesEndRef = useRef<HTMLDivElement>(null)
-  const supabase = createClient()
-
-  useEffect(() => {
-    const loadMessages = async () => {
-      if (!conversationId) return
-      
-      const { data, error } = await supabase
-        .from('ai_messages')
-        .select('*')
-        .eq('conversation_id', conversationId)
-        .order('timestamp', { ascending: true })
-
-      if (data && !error) {
-        setMessages(data)
-      }
-    }
-
-    loadMessages()
-  }, [conversationId])
-
-  const handleSendMessage = async (content: string) => {
-    if (!content.trim()) return
-
-    const newMessage: Message = {
-      id: crypto.randomUUID(),
-      role: "user",
-      content,
-      timestamp: new Date().toISOString(),
-      conversation_id: conversationId
-    }
-
-    setMessages(prev => [...prev, newMessage])
-    setIsLoading(true)
-
-    try {
-      const response = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          messages: [...messages, newMessage],
-          conversationId 
-        }),
-      })
-
-      if (!response.ok) throw new Error('Failed to send message')
-
-      const reader = response.body?.getReader()
-      const decoder = new TextDecoder()
-      let assistantMessage = ''
-
-      while (reader) {
-        const { done, value } = await reader.read()
-        if (done) break
-        
-        assistantMessage += decoder.decode(value)
-        // Update UI with streaming response
-        setMessages(prev => [
-          ...prev.slice(0, -1),
-          {
-            id: crypto.randomUUID(),
-            role: "assistant",
-            content: assistantMessage,
-            timestamp: new Date().toISOString(),
-            conversation_id: conversationId
-          }
-        ])
-      }
-
-    } catch (error) {
-      console.error("Error sending message:", error)
-    } finally {
-      setIsLoading(false)
-    }
-  }
 
   return (
     <div className="flex flex-col h-[calc(100vh-12rem)] border rounded-lg bg-background">
@@ -133,7 +49,7 @@ export function AIAgentChat() {
             e.preventDefault()
             const input = e.currentTarget.querySelector('textarea')
             if (input?.value) {
-              handleSendMessage(input.value)
+              sendMessage(input.value)
               input.value = ""
             }
           }}
@@ -144,7 +60,7 @@ export function AIAgentChat() {
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault()
-                handleSendMessage(e.currentTarget.value)
+                sendMessage(e.currentTarget.value)
                 e.currentTarget.value = ""
               }
             }}

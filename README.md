@@ -1,4 +1,4 @@
-License: [Buy Commercial License](https://buy.stripe.com)
+License: [Buy Commercial License](https://buy.stripe.com/3cs16n9501j8djieUU)
 
 # Call Center AI Dashboard
 

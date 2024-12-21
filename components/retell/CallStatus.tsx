@@ -11,7 +11,7 @@ interface CallStatusProps {
   status: 'idle' | 'started' | 'ended' | 'analyzed'
 }
 
-export function CallStatus({ call, status }: CallStatusProps) {
+export default function CallStatus({ call, status }: CallStatusProps) {
   const formatTime = (start: number, end: number) => {
     const duration = Math.floor((end - start) / 1000) // durée en secondes
     const mins = Math.floor(duration / 60)
@@ -68,5 +68,3 @@ export function CallStatus({ call, status }: CallStatusProps) {
     </Card>
   )
 }
-
-export default CallStatus

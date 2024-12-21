@@ -1,0 +1,136 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins&display=swap');
+
+.container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+  font-family: 'Poppins', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  isolation: isolate;
+}
+
+.orb {
+  position: relative;
+  width: 600px;
+  height: 400px;
+  border-radius: 30px;
+  background: transparent;
+  border: 1px solid rgba(229, 231, 235, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  overflow: visible;
+  z-index: 1;
+  transform-style: preserve-3d;
+}
+
+.orb.active {
+  background: transparent;
+  border: 1px solid rgba(209, 213, 219, 0.2);
+}
+
+.orb.agent {
+  background: transparent;
+  border: 1px solid rgba(229, 231, 235, 0.1);
+}
+
+.orb.agent.active {
+  background: transparent;
+  border: 1px solid rgba(209, 213, 219, 0.2);
+}
+
+.messageContainer {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;}
+
+.messageWrapper {
+  position: relative;
+  font-size: 1.5rem;
+  font-weight: 500;
+  color: #374151;
+  max-width: 80%;
+  line-height: 1.4;
+  z-index: 10;
+}
+
+.messageWrapper :global(span) {
+  color: #374151 !important;
+  font-size: 1.5rem !important;
+  font-weight: 500 !important;
+  opacity: 1 !important;
+}
+
+.agent .messageWrapper {
+  color: #374151;
+}
+
+.customer .messageWrapper {
+  color: #374151;
+}
+
+.buttonContainer {
+  position: absolute;
+  bottom: -60px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+}
+
+.lightningBorder {
+  position: absolute;
+  inset: -2px;
+  border-radius: 32px;
+  border: 1px solid rgba(229, 231, 235, 0.1);
+  z-index: 0;
+}
+
+.orb.active .lightningBorder {
+  border-color: rgba(209, 213, 219, 0.2);
+}
+
+@keyframes onloadText {
+  0% {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (max-width: 900px) {
+  .orb {
+    width: 500px;
+    height: 300px;
+  }
+
+  .messageWrapper {
+    font-size: 1.2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .orb {
+    width: 90%;
+    height: 250px;
+  }
+
+  .messageWrapper {
+    font-size: 1rem;
+  }
+}

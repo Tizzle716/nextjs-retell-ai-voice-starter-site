@@ -1,0 +1,60 @@
+@keyframes gradientFlow {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.glowingGradient {
+  background: linear-gradient(45deg, #000000, #0a0514, #1a0b2e, #000000);
+  background-size: 300% 300%;
+  animation: gradientFlow 8s ease infinite;
+}
+
+.glowingText {
+  background: linear-gradient(45deg, #00ff8f, #00bcd4, #2196f3);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  background-size: 300% 300%;
+  animation: gradientFlow 8s ease infinite;
+  text-shadow: 0 0 20px rgba(0, 255, 143, 0.2);
+}
+
+.glowingButton {
+  background: linear-gradient(45deg, #1a0b2e, #2d1b4e, #3d2b6e);
+  background-size: 300% 300%;
+  animation: gradientFlow 8s ease infinite;
+  border: 1px solid #00ff8f;
+  box-shadow: 0 0 15px rgba(0, 255, 143, 0.2);
+  transition: all 0.3s ease;
+}
+
+.glowingButton:hover {
+  box-shadow: 0 0 25px rgba(0, 255, 143, 0.4);
+  border-color: #00bcd4;
+  transform: translateY(-2px);
+}
+
+.glowingSection {
+  background: linear-gradient(45deg, rgba(0,0,0,0.97), rgba(10,5,20,0.97), rgba(26,11,46,0.97));
+  background-size: 300% 300%;
+  animation: gradientFlow 12s ease infinite;
+  box-shadow: 0 0 30px rgba(0, 255, 143, 0.1);
+}
+
+.heroText {
+  background: linear-gradient(45deg, #00ff8f, #00bcd4, #2196f3, #00ff8f);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  background-size: 300% 300%;
+  animation: gradientFlow 8s ease infinite;
+  text-shadow: 0 0 30px rgba(0, 255, 143, 0.3);
+  font-weight: bold;
+}

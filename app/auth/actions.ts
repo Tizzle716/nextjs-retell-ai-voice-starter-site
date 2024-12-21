@@ -45,3 +45,21 @@ export async function signOut() {
   await supabase.auth.signOut()
   redirect('/login')
 }
+
+export async function resetPassword(formData: FormData) {
+  const cookieStore = cookies()
+  const supabase = createClient(cookieStore)
+
+  const { error } = await supabase.auth.resetPasswordForEmail(
+    formData.get('email') as string,
+    {
+      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback?next=/update-password`,
+    }
+  )
+
+  if (error) {
+    return { error: error.message }
+  }
+
+  return { success: true }
+}

@@ -1,85 +1,183 @@
-import { NextResponse } from 'next/server'
-import { RetellCall } from '@/app/types/retell'
+import { NextResponse } from 'next/server';
+import { z } from 'zod';
+import Retell from 'retell-sdk';
 
-export async function GET() {
-  const mockCalls: RetellCall[] = Array.from({ length: 10 }, (_, index) => 
-    generateMockCall(index + 1)
-  );
+// Define the schema here since it's not exported from types
+const RetellCallDataSchema = z.object({
+  agent_id: z.string(),
+  customer_number: z.string(),
+  webhook_url: z.string().optional(),
+  recording_webhook_url: z.string().optional(),
+  recording_format: z.string().optional(),
+  recording_destination_url: z.string().optional()
+});
 
-  return NextResponse.json(mockCalls)
+interface RetellCall {
+  call_id: string;
+  agent_id: string;
+  customer_number: string;
+  status: string;
+  created_at: string;
+  updated_at: string;
+}
+
+const client = new Retell({
+  apiKey: process.env.RETELL_API_KEY || '',
+});
+
+// Helper function to handle API responses
+async function handleApiResponse(response: Response, context: string) {
+  const contentType = response.headers.get('content-type');
+  let errorData: any;
+  
+  try {
+    if (contentType?.includes('application/json')) {
+      errorData = await response.json();
+    } else {
+      errorData = await response.text();
+    }
+  } catch (e) {
+    errorData = 'Could not parse response';
+  }
+
+  console.error(`${context} API error:`, {
+    status: response.status,
+    statusText: response.statusText,
+    data: errorData,
+  });
+
+  let errorMessage = 'An error occurred';
+  if (typeof errorData === 'string') {
+    errorMessage = errorData;
+  } else if (errorData?.error) {
+    errorMessage = errorData.error;
+  } else if (errorData?.message) {
+    errorMessage = errorData.message;
+  }
+
+  const error = new Error(errorMessage);
+  (error as any).status = response.status;
+  (error as any).data = errorData;
+  throw error;
+}
+
+export async function GET(request: Request) {
+  try {
+    if (!process.env.RETELL_API_KEY) {
+      console.error('Retell API key is missing');
+      return NextResponse.json(
+        { error: 'Retell API key not configured' },
+        { status: 500 }
+      );
+    }
+
+    const { searchParams } = new URL(request.url);
+    const callId = searchParams.get('callId');
+    const limit = parseInt(searchParams.get('limit') || '10');
+    const offset = parseInt(searchParams.get('offset') || '0');
+
+    // If callId is provided, fetch specific call
+    if (callId) {
+      try {
+        // TODO: Replace with proper Retell API call when types are fixed
+        const call: RetellCall = {
+          call_id: callId,
+          agent_id: 'placeholder',
+          customer_number: 'placeholder',
+          status: 'completed',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+
+        return NextResponse.json(call);
+      } catch (error: any) {
+        console.error('[Calls API] Error fetching call:', error);
+        return NextResponse.json(
+          { error: 'Failed to fetch call' },
+          { status: error.status || 500 }
+        );
+      }
+    }
+
+    // If no callId, fetch all calls with pagination
+    try {
+      // TODO: Replace with proper Retell API call when types are fixed
+      const calls: RetellCall[] = [{
+        call_id: 'placeholder',
+        agent_id: 'placeholder',
+        customer_number: 'placeholder',
+        status: 'completed',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }];
+
+      return NextResponse.json({
+        calls,
+        pagination: {
+          total: calls.length,
+          limit,
+          offset
+        }
+      });
+    } catch (error: any) {
+      console.error('[Calls API] Error fetching calls:', error);
+      return NextResponse.json(
+        { error: 'Failed to fetch calls' },
+        { status: error.status || 500 }
+      );
+    }
+  } catch (error: any) {
+    console.error('[Calls API] Error in GET /api/calls:', error);
+    return NextResponse.json(
+      { error: error.message || 'An unexpected error occurred' },
+      { status: error.status || 500 }
+    );
+  }
 }
 
 export async function POST(request: Request) {
-  const body = await request.json();
-  // Implement POST logic here
-  return NextResponse.json({ message: "POST request received", data: body })
-}
+  try {
+    if (!process.env.RETELL_API_KEY) {
+      console.error('Retell API key is missing');
+      return NextResponse.json(
+        { error: 'Retell API key not configured' },
+        { status: 500 }
+      );
+    }
 
-function generateMockCall(id: number): RetellCall {
-  const startTime = Date.now() - Math.floor(Math.random() * 3600000) // Jusqu'à 1 heure dans le passé
-  const endTime = startTime + Math.floor(Math.random() * 600000) // Jusqu'à 10 minutes de durée
+    const body = await request.json();
+    console.log('[Calls API] Creating new call with data:', body);
 
-  return {
-    call_type: Math.random() > 0.5 ? 'inbound' : 'outbound',
-    call_id: `call_${id}`,
-    agent_id: `agent_${Math.floor(Math.random() * 5) + 1}`,
-    call_status: ['completed', 'in_progress', 'failed'][Math.floor(Math.random() * 3)],
-    metadata: {},
-    retell_llm_dynamic_variables: {
-      customer_name: `Customer ${id}`,
-    },
-    opt_out_sensitive_data_storage: false,
-    start_timestamp: startTime,
-    end_timestamp: endTime,
-    transcript: `This is a mock transcript for call ${id}`,
-    transcript_object: [
-      {
-        role: 'agent',
-        content: 'Hello, how can I help you today?',
-        words: [],
-      },
-      {
-        role: 'customer',
-        content: 'I have a question about my account.',
-        words: [],
-      },
-    ],
-    recording_url: `https://example.com/recording_${id}.mp3`,
-    public_log_url: `https://example.com/log_${id}.txt`,
-    e2e_latency: {
-      p50: 100,
-      p90: 200,
-      p95: 250,
-      p99: 300,
-      max: 350,
-      min: 50,
-      num: 100,
-    },
-    llm_latency: {
-      p50: 50,
-      p90: 100,
-      p95: 125,
-      p99: 150,
-      max: 175,
-      min: 25,
-      num: 100,
-    },
-    llm_websocket_network_rtt_latency: {
-      p50: 10,
-      p90: 20,
-      p95: 25,
-      p99: 30,
-      max: 35,
-      min: 5,
-      num: 100,
-    },
-    disconnection_reason: '',
-    call_analysis: {
-      call_summary: `This is a summary for call ${id}`,
-      in_voicemail: false,
-      user_sentiment: ['positive', 'neutral', 'negative'][Math.floor(Math.random() * 3)],
-      call_successful: Math.random() > 0.2,
-      custom_analysis_data: {},
-    },
+    try {
+      // TODO: Replace with proper Retell API call when types are fixed
+      const callData: RetellCall = {
+        call_id: 'placeholder',
+        agent_id: body.agent_id,
+        customer_number: body.customer_number,
+        status: 'created',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+
+      return NextResponse.json(callData);
+    } catch (error: any) {
+      console.error('[Calls API] Error creating call:', error);
+      console.error('[Calls API] Error details:', {
+        message: error.message,
+        status: error.status,
+        stack: error.stack
+      });
+      
+      return NextResponse.json(
+        { error: 'Failed to create call' },
+        { status: error.status || 500 }
+      );
+    }
+  } catch (error: any) {
+    console.error('[Calls API] Error in POST /api/calls:', error);
+    return NextResponse.json(
+      { error: error.message || 'An unexpected error occurred' },
+      { status: error.status || 500 }
+    );
   }
 }

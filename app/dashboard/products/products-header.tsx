@@ -10,9 +10,9 @@ export function ProductsHeader() {
   return (
     <div className="flex items-center justify-between">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Produits & Services</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Products & Services</h1>
         <p className="text-muted-foreground">
-          Gérez votre catalogue de produits et services
+          Manage your catalog of products and services
         </p>
       </div>
       <Button

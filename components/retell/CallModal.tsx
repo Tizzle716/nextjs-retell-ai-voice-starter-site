@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react'
 import { RetellCall } from '@/app/types/retell'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'

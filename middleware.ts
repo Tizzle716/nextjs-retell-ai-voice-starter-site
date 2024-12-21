@@ -18,6 +18,10 @@ export async function middleware(request: NextRequest) {
     // Create a response object to modify
     const response = NextResponse.next()
     
+    // Add headers to bypass ngrok warning
+    response.headers.set('ngrok-skip-browser-warning', 'true');
+    response.headers.set('User-Agent', 'CustomAgent/1.0');
+    
     const supabase = createClient(request)
     
     // Validate the user token with getUser() instead of getSession()

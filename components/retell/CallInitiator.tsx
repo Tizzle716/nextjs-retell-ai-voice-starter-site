@@ -15,11 +15,11 @@ interface CallInitiatorProps {
   onCallEnded: () => void
 }
 
-const CallInitiator: React.FC<CallInitiatorProps> = ({ 
+export default function CallInitiator({ 
   retellNumber, 
   onCallInitiated, 
   onCallEnded 
-}) => {
+}: CallInitiatorProps) {
   const [toNumber, setToNumber] = useState('')
   const [isCallInProgress, setIsCallInProgress] = useState(false)
   const { toast } = useToast()
@@ -153,5 +153,3 @@ const CallInitiator: React.FC<CallInitiatorProps> = ({
     </Card>
   )
 }
-
-export default CallInitiator

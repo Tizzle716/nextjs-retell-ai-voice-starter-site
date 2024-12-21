@@ -8,33 +8,40 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  CardFooter,
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
+import { useToast } from "@/hooks/use-toast"
 
-interface AuthFormProps {
-  isLoading?: boolean;
-  error?: string | null;
-}
+export function AuthForm() {
+  const [isPending, startTransition] = useTransition()
+  const { toast } = useToast()
 
-export function AuthForm({ isLoading, error }: AuthFormProps) {
-  const [, startTransition] = useTransition()
-
-  const handleSubmit = async (formData: FormData) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
     startTransition(async () => {
-      await signIn(formData)
+      const result = await signIn(formData)
+      if (result?.error) {
+        toast({
+          title: "Error",
+          description: result.error,
+          variant: "destructive",
+        })
+      }
     })
   }
 
   return (
-    <form action={handleSubmit}>
+    <form onSubmit={handleSubmit}>
       <Card className="mx-auto max-w-sm">
         <CardHeader>
           <CardTitle className="text-2xl">Login</CardTitle>
           <CardDescription>
-            Enter your email below to login to your account
+            Enter your email and password to login to your account
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -47,34 +54,39 @@ export function AuthForm({ isLoading, error }: AuthFormProps) {
                 type="email"
                 placeholder="m@example.com"
                 required
+                disabled={isPending}
               />
             </div>
             <div className="grid gap-2">
-              <div className="flex items-center">
-                <Label htmlFor="password">Password</Label>
-                <Link href="#" className="ml-auto inline-block text-sm underline">
-                  Forgot your password?
-                </Link>
-              </div>
-              <Input id="password" name="password" type="password" required />
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                name="password"
+                type="password"
+                required
+                disabled={isPending}
+              />
             </div>
-            {error && (
-              <p className="text-sm text-red-500">{error}</p>
-            )}
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Loading..." : "Login"}
-            </Button>
-            <Button variant="outline" className="w-full" type="button">
-              Login with Google
-            </Button>
-          </div>
-          <div className="mt-4 text-center text-sm">
-            Don&apos;t have an account?{" "}
-            <Link href="/register" className="underline">
-              Sign up
-            </Link>
           </div>
         </CardContent>
+        <CardFooter className="flex flex-col gap-4">
+          <Button className="w-full" type="submit" disabled={isPending}>
+            {isPending ? "Signing in..." : "Sign in"}
+          </Button>
+          <div className="flex flex-col gap-2 text-sm text-center text-muted-foreground">
+            <div>
+              Don&apos;t have an account?{" "}
+              <Link href="/signup" className="text-primary hover:underline">
+                Sign up
+              </Link>
+            </div>
+            <div>
+              <Link href="/reset-password" className="text-primary hover:underline">
+                Forgot your password?
+              </Link>
+            </div>
+          </div>
+        </CardFooter>
       </Card>
     </form>
   )

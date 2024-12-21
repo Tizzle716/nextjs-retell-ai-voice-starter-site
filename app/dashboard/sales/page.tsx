@@ -4,6 +4,8 @@ import ProductsPage from "./products/page"
 import ProposalPage from "./proposals/page"
 import AnalysisPage from "./analysis/page"
 
+export const dynamic = 'force-dynamic'
+
 export default function SalesPage() {
   return (
     <div className="container mx-auto p-6">

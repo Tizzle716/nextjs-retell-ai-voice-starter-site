@@ -1,3 +1,5 @@
+'use client'
+
 import * as React from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -19,7 +21,9 @@ import { parse } from 'csv-parse/sync'
 
 // Définition du schéma pour le formulaire d'import
 const formSchema = z.object({
-  file: z.instanceof(File).refine((file) => file.size <= 5000000, {
+  file: z.custom<File>((v) => v instanceof File, {
+    message: "Please upload a file",
+  }).refine((file) => file instanceof File && file.size <= 5000000, {
     message: "File size should be less than 5MB.",
   }),
 })

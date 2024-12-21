@@ -1,6 +1,6 @@
 License: [Buy Commercial License](https://buy.stripe.com/3cs16n9501j8djieUU)
 
-# Call Center AI Dashboard
+# NextJs Retell AI Appointment Booking Voice Assistant using Cal.com and Supabase
 
 A powerful, real-time call center analytics dashboard powered by AI for monitoring and analyzing customer service interactions.
 

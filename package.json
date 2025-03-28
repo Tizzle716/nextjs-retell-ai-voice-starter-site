@@ -1,5 +1,5 @@
 {
-  "name": "poil",
+  "name": "retell-ai-voice-assistant",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -66,6 +66,7 @@
     "react-international-phone": "^4.3.0",
     "react-window": "^1.8.10",
     "recharts": "^2.13.0",
+    "retell-ai-voice-assistant": "file:",
     "retell-client-js-sdk": "^2.0.4",
     "retell-sdk": "^4.11.0",
     "simplex-noise": "^4.0.3",

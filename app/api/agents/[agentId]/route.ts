@@ -36,10 +36,10 @@ async function getRetellApiKey() {
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { agentId: string } }
+  context: { params: { agentId: string } }
 ) {
   try {
-    const agentId = params.agentId;
+    const agentId = context.params.agentId;
     const data = await request.json();
 
     // Ensure pronunciation_dictionary is an array
@@ -158,10 +158,10 @@ export async function PATCH(
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { agentId: string } }
+  context: { params: { agentId: string } }
 ) {
   try {
-    const agentId = params.agentId;
+    const agentId = context.params.agentId;
     console.log('Checking Retell API configuration...');
     console.log('Agent ID:', agentId);
     
@@ -264,9 +264,10 @@ export async function GET(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { agentId: string } }
+  context: { params: { agentId: string } }
 ) {
   try {
+    const agentId = context.params.agentId;
     let retellApiKey;
     try {
       retellApiKey = await getRetellApiKey();
@@ -279,7 +280,7 @@ export async function DELETE(
     }
 
     const response = await fetch(
-      `https://api.retellai.com/delete-agent/${params.agentId}`,
+      `https://api.retellai.com/delete-agent/${agentId}`,
       {
         method: 'DELETE',
         headers: {
